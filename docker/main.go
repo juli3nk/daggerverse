@@ -1,53 +1,77 @@
 package main
 
 import (
-  "context"
+	"context"
+
+	"dagger/docker/internal/dagger"
 )
 
-type Docker struct {}
+type Docker struct{}
 
 func (m *Docker) Lint(
-  ctx context.Context,
-  dir *Directory,
-  source Optional[string],
+	ctx context.Context,
+	source *dagger.Directory,
+	// +optional
+	dockerfile []string,
+	// +optional
+	format string,
+	// +optional
+	ignore []string,
+	// +optional
+	failureThreshold string,
 ) (string, error) {
-  containerImage := "hadolint/hadolint:latest"
+	containerImage := "hadolint/hadolint:latest"
 
-  src := source.GetOr(".")
+	args := []string{
+		"hadolint",
+	}
+	args = append(args, dockerfile...)
 
-  return dag.Container().
-    From(containerImage).
-    WithMountedDirectory("/mnt", dir).
-    WithWorkdir("/mnt").
-    WithExec([]string{src}).
-    Stdout(ctx)
+	if len(format) > 0 {
+		args = append(args, "--format", format)
+	}
+	if len(ignore) > 0 {
+		for _, ign := range ignore {
+			args = append(args, "--ignore", ign)
+		}
+	}
+	if len(failureThreshold) > 0 {
+		args = append(args, "--failure-threshold", failureThreshold)
+	}
+
+	return dag.Container().
+		From(containerImage).
+		WithMountedDirectory("/src", source).
+		WithWorkdir("/src").
+		WithExec(args).
+		Stdout(ctx)
 }
 
 func (m *Docker) Build(
-  ctx context.Context,
-  dir *Directory,
-  dockerfile Optional[string],
-) (string, error) {
-  df := dockerfile.GetOr("Dockerfile")
+	ctx context.Context,
+	source *dagger.Directory,
+	// +optional
+	// +default="."
+	dir *dagger.Directory,
+	// +optional
+	// +default="Dockerfile"
+	dockerfile string,
+	// +optional
+	buildArgs []string,
+	// +optional
+	secrets []*dagger.Secret,
+) (*dagger.Container, error) {  
+	opts := ContainerBuildOpts{
+		Dockerfile: dockerfile,
+	}
+	if len(buildArgs) > 0 {
+		opts.BuildArgs: buildArgs,
+	}
+	if len(secrets) > 0 {
+		opts.Secrets: secrets,
+	}
 
-  opts := ContainerBuildOpts{}
-
-  return dag.Container().
-    Build(dir).
-    Stdout(ctx)
-}
-
-func (m *Docker) Push(
-  ctx context.Context,
-  dir *Directory,
-  address string,
-) (string, error) {
-  df := address.GetOr("Dockerfile")
-
-  opts := ContainerPublishOpts{}
-
-  return dag.Container().
-    WithRegistryAuth(address string, username string, secret *Secret).
-    Publish(ctx, addr, opts).
-    Stdout(ctx)
+	return dag.Container().
+	  Build(dir, opts).
+	  Stdout(ctx)
 }

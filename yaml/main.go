@@ -32,18 +32,24 @@ func (m *Yaml) Fmt(
 }
 
 func (m *Yaml) Lint(
-  ctx context.Context,
-  dir *Directory,
-  source Optional[string],
+	ctx context.Context,
+	source *dagger.Directory,
+	// +optional
+	// +default="."
+	filedir string,
 ) (string, error) {
-  containerImage := "cytopia/yamllint:stable"
+	containerImage := "pipelinecomponents/yamllint:latest"
 
-  src := source.GetOr(".")
+	args := []string{
+		"yamllint",
+		"--diff",
+		filedir,
+	}
 
-  return dag.Container().
-    From(containerImage).
-    WithMountedDirectory("/mnt", dir).
-    WithWorkdir("/mnt").
-    WithExec([]string{src}).
-    Stdout(ctx)
+	return dag.Container().
+		From(containerImage).
+		WithMountedDirectory("/src", source).
+		WithWorkdir("/src").
+		WithExec(args).
+		Stdout(ctx)
 }

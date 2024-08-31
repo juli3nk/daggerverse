@@ -1,28 +1,44 @@
 package main
 
 import (
-  "context"
-  "strconv"
+	"context"
+
+	"dagger/gitleaks/internal/dagger"
 )
 
-type Gitleaks struct {}
-
-const gitleaksImage = "zricethezav/gitleaks:latest"
+type Gitleaks struct{}
 
 func (m *Gitleaks) Detect(
-  ctx context.Context,
-  repo *Directory,
-  exitCode Optional[int],
-  source Optional[string],
+	ctx context.Context,
+	source *dagger.Directory,
+	// +optional
+	exitCode string,
+	// +optional
+	reportFormat string,
+	// +optional
+	verbose bool,
 ) (string, error) {
-  ec := exitCode.GetOr(0)
-  src := source.GetOr(".")
+	containerImage := "zricethezav/gitleaks:latest"
 
-  return dag.
-    Container().
-    From(gitleaksImage).
-    WithMountedDirectory("/src", repo).
-    WithWorkdir("/src").
-    WithExec([]string{"detect", "--source", src, "--exit-code", strconv.Itoa(ec), "--verbose"}).
-    Stdout(ctx)
+	args := []string{
+		"gitleaks",
+		"detect",
+	}
+
+	if len(exitCode) > 0 {
+		args = append(args, "--exit-code", exitCode)
+	}
+	if len(reportFormat) > 0 {
+		args = append(args, "--report-format", reportFormat)
+	}
+	if verbose {
+		args = append(args, "--verbose")
+	}
+
+	return dag.Container().
+		From(containerImage).
+		WithMountedDirectory("/src", source).
+		WithWorkdir("/src").
+		WithExec(args).
+		Stdout(ctx)
 }

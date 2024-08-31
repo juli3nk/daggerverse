@@ -1,4 +1,4 @@
-module dagger/gitleaks
+module dagger/go
 
 go 1.22.5
 

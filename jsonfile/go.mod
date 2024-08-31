@@ -1,4 +1,4 @@
-module dagger/gitleaks
+module dagger/jsonfile
 
 go 1.22.5
 

@@ -1,5 +1,5 @@
 {
-  "name": "gitleaks",
+  "name": "go",
   "sdk": "go",
   "source": ".",
   "engineVersion": "v0.12.5"

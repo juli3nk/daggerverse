@@ -8,12 +8,14 @@ import (
 	"dagger/go/internal/dagger"
 )
 
-// Returns a binary
 func (m *Go) Build(
 	// The binary name to build
 	name string,
 	// Go packages
 	packages []string,
+	// +optional
+	// +default="1"
+	cgoEnabled string,
 	// +optional
 	ldflags []string,
 	// The arch to build for
@@ -58,6 +60,7 @@ func (m *Go) Build(
 		WithEnvVariable("GOCACHE", "/go/build-cache").
 		WithEnvVariable("GOOS", os).
 		WithEnvVariable("GOARCH", arch).
+		WithEnvVariable("CGO_ENABLED", cgoEnabled).
 		WithExec(args).
 		File(binaryPath)
 }

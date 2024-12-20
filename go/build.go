@@ -16,7 +16,10 @@ func (m *Go) Build(
 	// +optional
 	// +default="1"
 	cgoEnabled string,
-	// +optional
+  // +optional
+  // +default="false"
+  musl bool,
+  // +optional
 	ldflags []string,
 	// The arch to build for
 	// +optional
@@ -30,7 +33,18 @@ func (m *Go) Build(
 		arch = runtime.GOARCH
 	}
 
+  binaryName := fmt.Sprintf("%s-%s-%s", name, os, arch)
+	binaryPath := fmt.Sprintf("build/%s", binaryName)
+
 	goBuildLdflags := ldflags
+
+  if musl {
+    goBuildLdflags = append(goBuildLdflags,
+      "-linkmode",
+      "external",
+    )
+  }
+
 	goBuildLdflags = append(goBuildLdflags,
 		"-extldflags",
 		"-static",
@@ -38,21 +52,40 @@ func (m *Go) Build(
 		"-w",
 	)
 
-	binaryName := fmt.Sprintf("%s-%s-%s", name, os, arch)
-	binaryPath := fmt.Sprintf("build/%s", binaryName)
+	// WithEnvVariable("GOMODCACHE", "/go/pkg/mod").
 
-	args := []string{
+  ctr := dag.Container().
+    From(fmt.Sprintf("golang:%s", m.Version))
+
+  if musl {
+    envCC := "musl-gcc"
+
+    ctr = ctr.WithExec([]string{"apt-get", "update"}).WithExec([]string{
+      "apt-get", "install", "--no-install-recommends", "--yes",
+      "musl",
+      "musl-dev",
+      "musl-tools",
+    })
+
+    if arch == "arm64" {
+      ctr = ctr.WithExec([]string{"/bin/sh", "-c", `curl -sfL https://musl.cc/aarch64-linux-musl-cross.tgz | tar -xzC /opt`})
+
+      envCC = "/opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc"
+    }
+
+    ctr = ctr.WithEnvVariable("CC", envCC)
+  }
+
+  args := []string{
 		"go",
 		"build",
 		"-o", binaryPath,
-		"-ldflags", strings.Join(goBuildLdflags, " "),
+		"-ldflags",
+    strings.Join(goBuildLdflags, " "),
 	}
 	args = append(args, packages...)
 
-	// WithEnvVariable("GOMODCACHE", "/go/pkg/mod").
-
-	return dag.Container().
-		From(fmt.Sprintf("golang:%s", m.Version)).
+	return ctr.
 		WithMountedDirectory("/src", m.Worktree).
 		WithWorkdir("/src").
 		WithMountedCache("/go/pkg/mod", dag.CacheVolume(fmt.Sprintf("go-mod-%s", m.Version))).

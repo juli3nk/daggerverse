@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+  "strings"
 
 	"dagger/docker/internal/dagger"
 )
@@ -51,27 +52,29 @@ func (m *Docker) Build(
 	ctx context.Context,
 	source *dagger.Directory,
 	// +optional
-	// +default="."
-	dir *dagger.Directory,
-	// +optional
 	// +default="Dockerfile"
 	dockerfile string,
 	// +optional
 	buildArgs []string,
 	// +optional
 	secrets []*dagger.Secret,
-) (*dagger.Container, error) {  
-	opts := ContainerBuildOpts{
+) *dagger.Container {
+	opts := dagger.ContainerBuildOpts{
 		Dockerfile: dockerfile,
 	}
 	if len(buildArgs) > 0 {
-		opts.BuildArgs: buildArgs,
+    var args []dagger.BuildArg
+
+    for _, arg := range buildArgs {
+      nv := strings.Split(arg, "=")
+
+      args = append(args, dagger.BuildArg{Name: nv[1], Value: nv[2]})
+    }
+		opts.BuildArgs = args
 	}
 	if len(secrets) > 0 {
-		opts.Secrets: secrets,
+		opts.Secrets = secrets
 	}
 
-	return dag.Container().
-	  Build(dir, opts).
-	  Stdout(ctx)
+	return dag.Container().Build(source, opts)
 }

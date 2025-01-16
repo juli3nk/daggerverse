@@ -4,21 +4,21 @@ import (
 	"context"
 	"strings"
 
-	"dagger/git/internal/dagger"
+	"dagger/gitlocal/internal/dagger"
 )
 
-type Git struct {
+type Gitlocal struct {
 	Worktree *dagger.Directory
 }
 
 func New(
 	source *dagger.Directory,
-) *Git {
-	return &Git{Worktree: source}
+) *Gitlocal {
+	return &Gitlocal{Worktree: source}
 }
 
 // Returns if there is uncommited files
-func (m *Git) Uncommited() (bool, error) {
+func (m *Gitlocal) Uncommited() (bool, error) {
 	execArgs := []string{
 		"git",
 		"status",
@@ -41,7 +41,7 @@ func (m *Git) Uncommited() (bool, error) {
 	return true, nil
 }
 
-func (m *Git) GetLatestCommit() (string, error) {
+func (m *Gitlocal) GetLatestCommit() (string, error) {
 	execArgs := []string{
 		"git",
 		"rev-parse",
@@ -61,7 +61,7 @@ func (m *Git) GetLatestCommit() (string, error) {
 	return strings.TrimSpace(result), nil
 }
 
-func (m *Git) GetLatestTag() (string, error) {
+func (m *Gitlocal) GetLatestTag() (string, error) {
 	execArgs := []string{
 		"git",
 		"tag",
@@ -82,7 +82,7 @@ func (m *Git) GetLatestTag() (string, error) {
 	return strings.TrimSpace(result), nil
 }
 
-func (m *Git) container() *dagger.Container {
+func (m *Gitlocal) container() *dagger.Container {
 	return dag.
 		Wolfi().
 		Container(dagger.WolfiContainerOpts{

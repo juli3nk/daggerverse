@@ -1,0 +1,13 @@
+{
+  "name": "gitlocal",
+  "engineVersion": "v0.14.0",
+  "sdk": "go",
+  "dependencies": [
+    {
+      "name": "wolfi",
+      "source": "github.com/shykes/daggerverse/wolfi",
+      "pin": "a3f377083ddc015de801b7b04d0543bc5647b3f8"
+    }
+  ],
+  "source": "."
+}

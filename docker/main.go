@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-  "strings"
+	"strings"
 
 	"dagger/docker/internal/dagger"
 )
@@ -13,7 +13,7 @@ func (m *Docker) Lint(
 	ctx context.Context,
 	source *dagger.Directory,
 	// +optional
-	dockerfile []string,
+	dockerfiles []string,
 	// +optional
 	format string,
 	// +optional
@@ -23,10 +23,14 @@ func (m *Docker) Lint(
 ) (string, error) {
 	containerImage := "hadolint/hadolint:latest"
 
+	if len(dockerfiles) == 0 {
+		dockerfiles = []string{"Dockerfile"}
+	}
+
 	args := []string{
 		"hadolint",
 	}
-	args = append(args, dockerfile...)
+	args = append(args, dockerfiles...)
 
 	if len(format) > 0 {
 		args = append(args, "--format", format)
@@ -51,7 +55,7 @@ func (m *Docker) Lint(
 func (m *Docker) Build(
 	ctx context.Context,
 	source *dagger.Directory,
-  platform dagger.Platform,
+	platform dagger.Platform,
 	// +optional
 	// +default="Dockerfile"
 	dockerfile string,
@@ -67,9 +71,9 @@ func (m *Docker) Build(
     var args []dagger.BuildArg
 
     for _, arg := range buildArgs {
-      nv := strings.Split(arg, "=")
+		nv := strings.Split(arg, "=")
 
-      args = append(args, dagger.BuildArg{Name: nv[0], Value: nv[1]})
+		args = append(args, dagger.BuildArg{Name: nv[0], Value: nv[1]})
     }
 		opts.BuildArgs = args
 	}
@@ -77,8 +81,8 @@ func (m *Docker) Build(
 		opts.Secrets = secrets
 	}
 
-  ctr := dag.Container(dagger.ContainerOpts{Platform: platform}).
+	ctr := dag.Container(dagger.ContainerOpts{Platform: platform}).
     Build(source, opts)
 
-  return ctr
+	return ctr
 }

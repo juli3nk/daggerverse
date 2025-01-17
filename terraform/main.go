@@ -1,7 +1,7 @@
 package main
 
 import (
-  "context"
+	"context"
 )
 
 type Terraform struct {}
@@ -9,39 +9,39 @@ type Terraform struct {}
 const containerImage = "hashicorp/terraform:latest"
 
 func (m *Terraform) Fmt(
-  ctx context.Context,
-  dir *Directory,
-  write Optional[int],
-  source Optional[string],
+	ctx context.Context,
+	dir *Directory,
+	write Optional[int],
+	source Optional[string],
 ) (string, error) {
-  w := write.GetOr(false)
-  src := source.GetOr(".")
+	w := write.GetOr(false)
+	src := source.GetOr(".")
 
-  cmdArgs := []string{src}
+	cmdArgs := []string{src}
 
-  if w {
-    cmdArgs = append(cmdArgs, "-w")
-  }
+	if w {
+		cmdArgs = append(cmdArgs, "-w")
+	}
 
-  return dag.Container().
-    From(containerImage).
-    WithMountedDirectory("/mnt", dir).
-    WithWorkdir("/mnt").
-    WithExec(cmdArgs).
-    Stdout(ctx)
+	return dag.Container().
+		From(containerImage).
+		WithMountedDirectory("/mnt", dir).
+		WithWorkdir("/mnt").
+		WithExec(cmdArgs).
+		Stdout(ctx)
 }
 
 func (m *Terraform) Lint(
-  ctx context.Context,
-  dir *Directory,
-  source Optional[string],
+	ctx context.Context,
+	dir *Directory,
+	source Optional[string],
 ) (string, error) {
-  src := source.GetOr(".")
+	src := source.GetOr(".")
 
-  return dag.Container().
-    From(containerImage).
-    WithMountedDirectory("/mnt", dir).
-    WithWorkdir("/mnt").
-    WithExec([]string{src}).
-    Stdout(ctx)
+	return dag.Container().
+		From(containerImage).
+		WithMountedDirectory("/mnt", dir).
+		WithWorkdir("/mnt").
+		WithExec([]string{src}).
+		Stdout(ctx)
 }

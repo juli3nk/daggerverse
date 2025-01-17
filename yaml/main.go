@@ -1,34 +1,34 @@
 package main
 
 import (
-  "context"
+	"context"
 )
 
 type Yaml struct {}
 
 func (m *Yaml) Fmt(
-  ctx context.Context,
-  dir *Directory,
-  write Optional[int],
-  source Optional[string],
+	ctx context.Context,
+	dir *Directory,
+	write Optional[int],
+	source Optional[string],
 ) (string, error) {
-  containerImage := "cytopia/yamlfmt:stable"
+	containerImage := "cytopia/yamlfmt:stable"
 
-  w := write.GetOr(false)
-  src := source.GetOr(".")
+	w := write.GetOr(false)
+	src := source.GetOr(".")
 
-  cmdArgs := []string{src}
+	cmdArgs := []string{src}
 
-  if w {
-    cmdArgs = append(cmdArgs, "-w")
-  }
+	if w {
+		cmdArgs = append(cmdArgs, "-w")
+	}
 
-  return dag.Container().
-    From(containerImage).
-    WithMountedDirectory("/mnt", dir).
-    WithWorkdir("/mnt").
-    WithExec(cmdArgs).
-    Stdout(ctx)
+	return dag.Container().
+		From(containerImage).
+		WithMountedDirectory("/mnt", dir).
+		WithWorkdir("/mnt").
+		WithExec(cmdArgs).
+		Stdout(ctx)
 }
 
 func (m *Yaml) Lint(

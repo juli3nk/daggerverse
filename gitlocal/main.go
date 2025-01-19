@@ -41,6 +41,43 @@ func (m *Gitlocal) Uncommited() (bool, error) {
 	return true, nil
 }
 
+func (m *GitLocal) GetModifiedFiles(
+	ctx context.Context,
+	compareWithWorkingTree bool,
+) ([]string, error) {
+	var execArgs []string
+	if compareWithWorkingTree {
+		execArgs := []string{
+			"git",
+			"diff",
+			"--name-only",
+			"HEAD",
+		}
+	} else {
+		execArgs = []string{
+			"git",
+			"diff-tree",
+			"--no-commit-id",
+			"--name-only",
+			"-r",
+			"HEAD",
+		}
+	}
+
+	result, err := m.container().
+		WithDirectory("/src", m.Worktree).
+		WithWorkdir("/src").
+		WithExec(execArgs).
+		Stdout(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	files := strings.Split(strings.TrimSpace(result), "\n")
+
+	return files, nil
+}
+
 func (m *Gitlocal) GetLatestCommit() (string, error) {
 	execArgs := []string{
 		"git",

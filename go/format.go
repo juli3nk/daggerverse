@@ -1,28 +1,27 @@
 package main
 
 import (
-	"bufio"
 	"context"
-	"strings"
 )
 
-func (m *Go) Fmt() ([]string, error) {
-	var result []string
+func (m *Go) Fmt(
+	ctx context.Context,
+	// +optional
+	filedir []string,
+) (string, error) {
+	execArgs := []string{
+		"gofmt",
+		"-l",
+	}
 
-	out, err := dag.Container().
+	if len(filedir) > 0 {
+		execArgs = append(execArgs, filedir...)
+	}
+
+	return dag.Container().
 		From("golang:latest").
 		WithMountedDirectory("/src", m.Worktree).
 		WithWorkdir("/src").
-		WithExec([]string{"gofmt", "-l"}).
-		Stdout(context.TODO())
-	if err != nil {
-		return nil, err
-	}
-
-	scanner := bufio.NewScanner(strings.NewReader(out))
-	for scanner.Scan() {
-		result = append(result, scanner.Text())
-	}
-
-	return result, nil
+		WithExec(execArgs).
+		Stdout(ctx)
 }

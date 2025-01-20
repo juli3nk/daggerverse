@@ -12,21 +12,23 @@ func (m *Jsonfile) Lint(
 	ctx context.Context,
 	source *dagger.Directory,
 	// +optional
-	// +default="."
-	filedir string,
+	filedir []string,
 ) (string, error) {
-	containerImage := "pipelinecomponents/jsonlint:latest"
-
-	args := []string{
+	execArgs := []string{
 		"jsonlint",
 		"--diff",
-		filedir,
+	}
+
+	if len(filedir) > 0 {
+		execArgs = append(execArgs, filedir...)
+	} else {
+		execArgs = append(execArgs, ".")
 	}
 
 	return dag.Container().
-		From(containerImage).
+		From("pipelinecomponents/jsonlint:latest").
 		WithMountedDirectory("/src", source).
 		WithWorkdir("/src").
-		WithExec(args).
+		WithExec(execArgs).
 		Stdout(ctx)
 }

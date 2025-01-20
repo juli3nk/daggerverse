@@ -19,10 +19,8 @@ func New(
 	return &Python{Version: version, Worktree: source}
 }
 
-func (m *Python) container() *dagger.Container {
-	pipInstallCommand := []string{"pip", "install"}
-	pipInstallCommand = append(pipInstallCommand, toolsFormatter...)
-	pipInstallCommand = append(pipInstallCommand, toolsLinter...)
+func (m *Python) container(tool string) *dagger.Container {
+	pipInstallCommand := []string{"pip", "install", tool}
 
 	return dag.Container().
 		From(fmt.Sprintf("python:%s", m.Version)).

@@ -32,7 +32,7 @@ func (m *Python) Lint(
 
 	execArgs = append(execArgs, source)
 
-	return m.container().
+	return m.container(tool).
 		WithExec(append([]string{tool}, execArgs...)).
 		Stdout(ctx)
 }

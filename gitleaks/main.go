@@ -18,27 +18,25 @@ func (m *Gitleaks) Detect(
 	// +optional
 	verbose bool,
 ) (string, error) {
-	containerImage := "zricethezav/gitleaks:latest"
-
-	args := []string{
+	execArgs := []string{
 		"gitleaks",
 		"detect",
 	}
 
 	if len(exitCode) > 0 {
-		args = append(args, "--exit-code", exitCode)
+		execArgs = append(execArgs, "--exit-code", exitCode)
 	}
 	if len(reportFormat) > 0 {
-		args = append(args, "--report-format", reportFormat)
+		execArgs = append(execArgs, "--report-format", reportFormat)
 	}
 	if verbose {
-		args = append(args, "--verbose")
+		execArgs = append(execArgs, "--verbose")
 	}
 
 	return dag.Container().
-		From(containerImage).
+		From("zricethezav/gitleaks:latest").
 		WithMountedDirectory("/src", source).
 		WithWorkdir("/src").
-		WithExec(args).
+		WithExec(execArgs).
 		Stdout(ctx)
 }

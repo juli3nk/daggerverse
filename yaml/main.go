@@ -2,32 +2,31 @@ package main
 
 import (
 	"context"
+
+	"dagger/yaml/internal/dagger"
 )
 
-type Yaml struct {}
+type Yaml struct{}
 
 func (m *Yaml) Fmt(
 	ctx context.Context,
-	dir *Directory,
-	write Optional[int],
-	source Optional[string],
+	source *dagger.Directory,
+	// +optional
+	filedir []string,
 ) (string, error) {
-	containerImage := "cytopia/yamlfmt:stable"
+	var execArgs []string
 
-	w := write.GetOr(false)
-	src := source.GetOr(".")
-
-	cmdArgs := []string{src}
-
-	if w {
-		cmdArgs = append(cmdArgs, "-w")
+	if len(filedir) > 0 {
+		execArgs = append(execArgs, filedir...)
+	} else {
+		execArgs = append(execArgs, ".")
 	}
 
 	return dag.Container().
-		From(containerImage).
-		WithMountedDirectory("/mnt", dir).
+		From("cytopia/yamlfmt:stable").
+		WithMountedDirectory("/mnt", source).
 		WithWorkdir("/mnt").
-		WithExec(cmdArgs).
+		WithExec(execArgs).
 		Stdout(ctx)
 }
 
@@ -35,21 +34,23 @@ func (m *Yaml) Lint(
 	ctx context.Context,
 	source *dagger.Directory,
 	// +optional
-	// +default="."
-	filedir string,
+	filedir []string,
 ) (string, error) {
-	containerImage := "pipelinecomponents/yamllint:latest"
-
-	args := []string{
+	execArgs := []string{
 		"yamllint",
 		"--diff",
-		filedir,
+	}
+
+	if len(filedir) > 0 {
+		execArgs = append(execArgs, filedir...)
+	} else {
+		execArgs = append(execArgs, ".")
 	}
 
 	return dag.Container().
-		From(containerImage).
+		From("pipelinecomponents/yamllint:latest").
 		WithMountedDirectory("/src", source).
 		WithWorkdir("/src").
-		WithExec(args).
+		WithExec(execArgs).
 		Stdout(ctx)
 }

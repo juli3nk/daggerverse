@@ -31,7 +31,7 @@ func (m *Python) Fmt(
 
 	execArgs = append(execArgs, checkParam, source)
 
-	return m.container().
+	return m.container(tool).
 		WithExec(append([]string{tool}, execArgs...)).
 		Stdout(ctx)
 }

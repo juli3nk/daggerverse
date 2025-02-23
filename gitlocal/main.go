@@ -41,13 +41,13 @@ func (m *Gitlocal) Uncommited() (bool, error) {
 	return true, nil
 }
 
-func (m *GitLocal) GetModifiedFiles(
+func (m *Gitlocal) GetModifiedFiles(
 	ctx context.Context,
 	compareWithWorkingTree bool,
 ) ([]string, error) {
 	var execArgs []string
 	if compareWithWorkingTree {
-		execArgs := []string{
+		execArgs = []string{
 			"git",
 			"diff",
 			"--name-only",
@@ -120,9 +120,7 @@ func (m *Gitlocal) GetLatestTag() (string, error) {
 }
 
 func (m *Gitlocal) container() *dagger.Container {
-	return dag.
-		Wolfi().
-		Container(dagger.WolfiContainerOpts{
-			Packages: []string{"git"},
-		})
+	return dag.Apko().Wolfi().
+		WithPackages([]string{"git"}).
+		Container()
 }

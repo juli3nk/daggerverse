@@ -55,22 +55,22 @@ func (m *Go) Build(
 	// WithEnvVariable("GOMODCACHE", "/go/pkg/mod").
 
 	ctr := dag.Container().
-    From(fmt.Sprintf("golang:%s", m.Version))
+		From(fmt.Sprintf("golang:%s", m.Version))
 
 	if musl {
 		envCC := "musl-gcc"
 
 		ctr = ctr.WithExec([]string{"apt-get", "update"}).WithExec([]string{
 			"apt-get", "install", "--no-install-recommends", "--yes",
-				"musl",
-				"musl-dev",
-				"musl-tools",
-			})
+			"musl",
+			"musl-dev",
+			"musl-tools",
+		})
 
-			if strings.HasPrefix(arch, "linux/arm64") {
+		if strings.HasPrefix(arch, "linux/arm64") {
 			ctr = ctr.WithExec([]string{
 				"/bin/sh", "-c",
-				`curl -sfL https://musl.cc/aarch64-linux-musl-cross.tgz | tar -xzC /opt`
+				`curl -sfL https://musl.cc/aarch64-linux-musl-cross.tgz | tar -xzC /opt`,
 			})
 
 			envCC = "/opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc"

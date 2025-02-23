@@ -8,29 +8,13 @@
     "ghcr.io/devcontainers/features/go:1": {
       "version": "1.23"
     },
-    "ghcr.io/juli3nk/devcontainer-features/dagger-asdf:1": {}
+    "ghcr.io/devcontainers-extra/features/asdf-package:1": {
+      "plugin": "dagger",
+      "version": "0.16.1"
+    }
   },
   "containerEnv": {
-    "SHUTUP": "1",
-    "STOPIT": "1"
-  },
-  "customizations": {
-    "vscode": {
-      "settings": {
-        "terminal.integrated.profiles.linux": {
-          "bash (login)": {
-            "path": "bash",
-            "args": ["-l"]
-          }
-        },
-        "terminal.integrated.defaultProfile.windows": "bash (login)"
-      },
-      "extensions": [
-        "mads-hartmann.bash-ide-vscode",
-				"rogalmic.bash-debug",
-        "visualstudioexptteam.vscodeintellicode"
-      ]
-    }
+    "DAGGER_NO_NAG": "1"
   },
 	"workspaceMount": "type=bind,source=${localWorkspaceFolder},target=${containerWorkspaceFolder}"
 }

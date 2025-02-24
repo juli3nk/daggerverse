@@ -1,0 +1,14 @@
+{
+  "name": "platformio",
+  "engineVersion": "v0.16.1",
+  "sdk": {
+    "source": "go"
+  },
+  "dependencies": [
+    {
+      "name": "apko",
+      "source": "github.com/sagikazarmark/daggerverse/apko",
+      "pin": "a2a82eaee0a9f6668ee7f191de08c9fc61d7b3dc"
+    }
+  ]
+}

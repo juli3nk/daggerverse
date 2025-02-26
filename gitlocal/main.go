@@ -19,16 +19,18 @@ func New(
 
 // Returns if there is uncommited files
 func (m *Gitlocal) Uncommited() (bool, error) {
+	opts := dagger.ContainerWithExecOpts{
+		UseEntrypoint: true,
+	}
 	execArgs := []string{
-		"git",
 		"status",
 		"--short",
 	}
 
-	result, err := m.container().
+	result, err := m.git().
 		WithDirectory("/src", m.Worktree).
 		WithWorkdir("/src").
-		WithExec(execArgs).
+		WithExec(execArgs, opts).
 		Stdout(context.TODO())
 	if err != nil {
 		return false, err
@@ -45,17 +47,18 @@ func (m *Gitlocal) GetModifiedFiles(
 	ctx context.Context,
 	compareWithWorkingTree bool,
 ) ([]string, error) {
+	opts := dagger.ContainerWithExecOpts{
+		UseEntrypoint: true,
+	}
 	var execArgs []string
 	if compareWithWorkingTree {
 		execArgs = []string{
-			"git",
 			"diff",
 			"--name-only",
 			"HEAD",
 		}
 	} else {
 		execArgs = []string{
-			"git",
 			"diff-tree",
 			"--no-commit-id",
 			"--name-only",
@@ -64,10 +67,10 @@ func (m *Gitlocal) GetModifiedFiles(
 		}
 	}
 
-	result, err := m.container().
+	result, err := m.git().
 		WithDirectory("/src", m.Worktree).
 		WithWorkdir("/src").
-		WithExec(execArgs).
+		WithExec(execArgs, opts).
 		Stdout(ctx)
 	if err != nil {
 		return nil, err
@@ -79,17 +82,19 @@ func (m *Gitlocal) GetModifiedFiles(
 }
 
 func (m *Gitlocal) GetLatestCommit() (string, error) {
+	opts := dagger.ContainerWithExecOpts{
+		UseEntrypoint: true,
+	}
 	execArgs := []string{
-		"git",
 		"rev-parse",
 		"--short",
 		"HEAD",
 	}
 
-	result, err := m.container().
+	result, err := m.git().
 		WithDirectory("/src", m.Worktree).
 		WithWorkdir("/src").
-		WithExec(execArgs).
+		WithExec(execArgs, opts).
 		Stdout(context.TODO())
 	if err != nil {
 		return "", err
@@ -99,18 +104,20 @@ func (m *Gitlocal) GetLatestCommit() (string, error) {
 }
 
 func (m *Gitlocal) GetLatestTag() (string, error) {
+	opts := dagger.ContainerWithExecOpts{
+		UseEntrypoint: true,
+	}
 	execArgs := []string{
-		"git",
 		"tag",
 		"--list",
 		"--contains",
 		"HEAD",
 	}
 
-	result, err := m.container().
+	result, err := m.git().
 		WithDirectory("/src", m.Worktree).
 		WithWorkdir("/src").
-		WithExec(execArgs).
+		WithExec(execArgs, opts).
 		Stdout(context.TODO())
 	if err != nil {
 		return "", err
@@ -119,8 +126,9 @@ func (m *Gitlocal) GetLatestTag() (string, error) {
 	return strings.TrimSpace(result), nil
 }
 
-func (m *Gitlocal) container() *dagger.Container {
+func (m *Gitlocal) git() *dagger.Container {
 	return dag.Apko().Wolfi().
 		WithPackages([]string{"git"}).
-		Container()
+		Container().
+		WithEntrypoint([]string{"git"})
 }

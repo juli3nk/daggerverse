@@ -17,8 +17,8 @@ func New(
 	return &Gitlocal{Worktree: source}
 }
 
-// Returns if there is uncommited files
-func (m *Gitlocal) Uncommited() (bool, error) {
+// Returns if there is uncommitted files
+func (m *Gitlocal) Uncommitted() (bool, error) {
 	opts := dagger.ContainerWithExecOpts{
 		UseEntrypoint: true,
 	}

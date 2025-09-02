@@ -47,7 +47,7 @@ func (m *SemanticRelease) Run(
 
 	secretRepoToken, err := repoTokenSecret.Plaintext(ctx)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return dag.Container().

@@ -1,6 +1,6 @@
 {
   "name": "semantic-release",
-  "engineVersion": "v0.16.1",
+  "engineVersion": "v0.18.16",
   "sdk": {
     "source": "go"
   }

@@ -54,6 +54,7 @@ func (m *SemanticRelease) Run(
 		From("ghcr.io/juli3nk/semantic-release:main").
 		WithMountedDirectory("/data", source).
 		WithWorkdir("/data").
+		WithEnvVariable("CI", "true").
 		WithEnvVariable(repoTokenEnvVarName, secretRepoToken).
 		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
 		Stdout(ctx)

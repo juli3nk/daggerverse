@@ -16,34 +16,33 @@ func (m *SemanticRelease) Run(
 	// +optional
 	repositoryUrl string,
 	// +optional
-	// +default=true
+	// +default=false
 	dryRun bool,
 	// +optional
 	// +default=true
 	ci bool,
 	// +optional
 	// +default=false
-	debug bool,
+	debugMode bool,
 ) (string, error) {
 	var execArgs []string
 
-	if len(repositoryUrl) > 0 {
+	if repositoryUrl != "" {
 		execArgs = append(execArgs, "--repository-url", repositoryUrl)
 	}
+
 	if dryRun {
-		execArgs = append(execArgs, "--dry-run", "true")
-	} else {
-		execArgs = append(execArgs, "--dry-run", "false")
+		execArgs = append(execArgs, "--dry-run")
 	}
+
 	if ci {
-		execArgs = append(execArgs, "--ci", "true")
+		execArgs = append(execArgs, "--ci")
 	} else {
-		execArgs = append(execArgs, "--ci", "false")
+		execArgs = append(execArgs, "--no-ci")
 	}
-	if debug {
-		execArgs = append(execArgs, "--debug", "true")
-	} else {
-		execArgs = append(execArgs, "--debug", "false")
+
+	if debugMode {
+		execArgs = append(execArgs, "--debug")
 	}
 
 	secretRepoToken, err := repoTokenSecret.Plaintext(ctx)

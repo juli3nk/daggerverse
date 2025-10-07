@@ -8,6 +8,7 @@ import (
 
 type Gitleaks struct{}
 
+// Detect scans for secrets
 func (m *Gitleaks) Detect(
 	ctx context.Context,
 	source *dagger.Directory,
@@ -35,6 +36,7 @@ func (m *Gitleaks) Detect(
 
 	return dag.Container().
 		From("zricethezav/gitleaks:latest").
+		From("ghcr.io/gitleaks/gitleaks:latest").
 		WithMountedDirectory("/src", source).
 		WithWorkdir("/src").
 		WithExec(execArgs).

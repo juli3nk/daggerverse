@@ -2,17 +2,13 @@ package main
 
 import "context"
 
+// Lint runs golangci-lint
 func (m *Go) Lint(
 	ctx context.Context,
 	// +optional
 	filedir []string,
 ) (string, error) {
-	execArgs := []string{
-		"golangci-lint",
-		"run",
-		"-v",
-	}
-
+	execArgs := []string{"golangci-lint", "run", "-v"}
 	if len(filedir) > 0 {
 		execArgs = append(execArgs, filedir...)
 	}

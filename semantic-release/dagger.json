@@ -1,7 +1,8 @@
 {
   "name": "semantic-release",
-  "engineVersion": "v0.18.16",
+  "engineVersion": "v0.19.8",
   "sdk": {
     "source": "go"
-  }
+  },
+  "disableDefaultFunctionCaching": true
 }

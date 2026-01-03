@@ -1,7 +1,8 @@
 {
   "name": "yaml",
-  "engineVersion": "v0.16.1",
+  "engineVersion": "v0.19.8",
   "sdk": {
     "source": "go"
-  }
+  },
+  "disableDefaultFunctionCaching": true
 }

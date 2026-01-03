@@ -1,14 +1,15 @@
 {
   "name": "platformio",
-  "engineVersion": "v0.16.1",
+  "engineVersion": "v0.19.8",
   "sdk": {
     "source": "go"
   },
   "dependencies": [
     {
       "name": "apko",
-      "source": "github.com/sagikazarmark/daggerverse/apko",
+      "source": "github.com/sagikazarmark/daggerverse/apko@main",
       "pin": "a2a82eaee0a9f6668ee7f191de08c9fc61d7b3dc"
     }
-  ]
+  ],
+  "disableDefaultFunctionCaching": true
 }

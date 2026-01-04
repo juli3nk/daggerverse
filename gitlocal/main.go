@@ -18,13 +18,7 @@ func New(source *dagger.Directory) *Gitlocal {
 
 // Uncommitted returns if there are uncommitted files
 func (m *Gitlocal) Uncommitted(ctx context.Context) (bool, error) {
-	result, err := m.git().
-		WithDirectory("/src", m.Worktree).
-		WithWorkdir("/src").
-		WithExec([]string{"status", "--short"}, dagger.ContainerWithExecOpts{
-			UseEntrypoint: true,
-		}).
-		Stdout(ctx)
+	result, err := m.git(ctx, []string{"status", "--short"})
 	if err != nil {
 		return false, err
 	}
@@ -35,22 +29,21 @@ func (m *Gitlocal) Uncommitted(ctx context.Context) (bool, error) {
 // GetModifiedFiles returns list of modified files
 func (m *Gitlocal) GetModifiedFiles(
 	ctx context.Context,
-	// +optional
-	// +default=false
 	compareWithWorkingTree bool,
+	// +optional
+	// +default="HEAD"
+	compare string,
 ) ([]string, error) {
 	var execArgs []string
-	if compareWithWorkingTree {
-		execArgs = []string{"diff", "--name-only", "HEAD"}
+	if compareWithWorkingTree || strings.Contains(compare, "..") {
+		// Range de commits (ex: "origin/main..HEAD")
+		execArgs = []string{"diff", "--name-only", compare}
 	} else {
-		execArgs = []string{"diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"}
+		// Fichiers du commit spécifié (marche même pour le 1er commit)
+		execArgs = []string{"show", "--name-only", "--pretty=format:", compare}
 	}
 
-	result, err := m.git().
-		WithDirectory("/src", m.Worktree).
-		WithWorkdir("/src").
-		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
-		Stdout(ctx)
+	result, err := m.git(ctx, execArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -68,13 +61,7 @@ func (m *Gitlocal) GetModifiedFiles(
 
 // GetLatestCommit returns the short SHA of HEAD
 func (m *Gitlocal) GetLatestCommit(ctx context.Context) (string, error) {
-	result, err := m.git().
-		WithDirectory("/src", m.Worktree).
-		WithWorkdir("/src").
-		WithExec([]string{"rev-parse", "--short", "HEAD"}, dagger.ContainerWithExecOpts{
-			UseEntrypoint: true,
-		}).
-		Stdout(ctx)
+	result, err := m.git(ctx, []string{"rev-parse", "--short", "HEAD"})
 	if err != nil {
 		return "", err
 	}
@@ -84,16 +71,11 @@ func (m *Gitlocal) GetLatestCommit(ctx context.Context) (string, error) {
 
 // GetLatestTag returns the most recent tag on HEAD (sorted by version)
 func (m *Gitlocal) GetLatestTag(ctx context.Context) (string, error) {
-	result, err := m.git().
-		WithDirectory("/src", m.Worktree).
-		WithWorkdir("/src").
-		WithExec([]string{
-			"describe",
-			"--tags",
-			"--abbrev=0",
-		}, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
-		Stdout(ctx)
+	result, err := m.git(ctx, []string{"describe", "--tags", "--abbrev=0"})
 	if err != nil {
+		if strings.Contains(err.Error(), "No names found") {
+			return "", nil
+		}
 		return "", err
 	}
 
@@ -102,15 +84,7 @@ func (m *Gitlocal) GetLatestTag(ctx context.Context) (string, error) {
 
 // GetAllTags returns all tags pointing to HEAD
 func (m *Gitlocal) GetAllTags(ctx context.Context) ([]string, error) {
-	result, err := m.git().
-		WithDirectory("/src", m.Worktree).
-		WithWorkdir("/src").
-		WithExec([]string{
-			"tag",
-			"--points-at",
-			"HEAD",
-		}, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
-		Stdout(ctx)
+	result, err := m.git(ctx, []string{"tag", "--points-at", "HEAD"})
 	if err != nil {
 		return nil, err
 	}
@@ -128,15 +102,7 @@ func (m *Gitlocal) GetAllTags(ctx context.Context) ([]string, error) {
 
 // GetBranch returns the current branch name
 func (m *Gitlocal) GetBranch(ctx context.Context) (string, error) {
-	result, err := m.git().
-		WithDirectory("/src", m.Worktree).
-		WithWorkdir("/src").
-		WithExec([]string{
-			"rev-parse",
-			"--abbrev-ref",
-			"HEAD",
-		}, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
-		Stdout(ctx)
+	result, err := m.git(ctx, []string{"rev-parse", "--abbrev-ref", "HEAD"})
 	if err != nil {
 		return "", err
 	}
@@ -146,15 +112,7 @@ func (m *Gitlocal) GetBranch(ctx context.Context) (string, error) {
 
 // GetCommitMessage returns the commit message of HEAD
 func (m *Gitlocal) GetCommitMessage(ctx context.Context) (string, error) {
-	result, err := m.git().
-		WithDirectory("/src", m.Worktree).
-		WithWorkdir("/src").
-		WithExec([]string{
-			"log",
-			"-1",
-			"--pretty=%B",
-		}, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
-		Stdout(ctx)
+	result, err := m.git(ctx, []string{"log", "-1", "--pretty=%B"})
 	if err != nil {
 		return "", err
 	}
@@ -164,15 +122,7 @@ func (m *Gitlocal) GetCommitMessage(ctx context.Context) (string, error) {
 
 // GetCommitAuthor returns the author of HEAD
 func (m *Gitlocal) GetCommitAuthor(ctx context.Context) (string, error) {
-	result, err := m.git().
-		WithDirectory("/src", m.Worktree).
-		WithWorkdir("/src").
-		WithExec([]string{
-			"log",
-			"-1",
-			"--pretty=%an <%ae>",
-		}, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
-		Stdout(ctx)
+	result, err := m.git(ctx, []string{"log", "-1", "--pretty=%an <%ae>"})
 	if err != nil {
 		return "", err
 	}
@@ -182,15 +132,7 @@ func (m *Gitlocal) GetCommitAuthor(ctx context.Context) (string, error) {
 
 // GetCommitDate returns the date of HEAD
 func (m *Gitlocal) GetCommitDate(ctx context.Context) (string, error) {
-	result, err := m.git().
-		WithDirectory("/src", m.Worktree).
-		WithWorkdir("/src").
-		WithExec([]string{
-			"log",
-			"-1",
-			"--pretty=%cI",
-		}, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
-		Stdout(ctx)
+	result, err := m.git(ctx, []string{"log", "-1", "--pretty=%cI"})
 	if err != nil {
 		return "", err
 	}
@@ -198,71 +140,35 @@ func (m *Gitlocal) GetCommitDate(ctx context.Context) (string, error) {
 	return strings.TrimSpace(result), nil
 }
 
-type GitInfo struct {
-	Commit        string
-	Branch        string
-	Tag           string
-	Dirty         bool
-	Message       string
-	Author        string
-	Date          string
-	ModifiedFiles []string
-}
+func (m *Gitlocal) git(ctx context.Context, execArgs []string) (string, error) {
+	fullArgs := append([]string{"--no-pager"}, execArgs...)
 
-// Info returns all git information as a structured object
-func (m *Gitlocal) Info(ctx context.Context) (*GitInfo, error) {
-	commit, err := m.GetLatestCommit(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	branch, err := m.GetBranch(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	tag, _ := m.GetLatestTag(ctx) // Ignore error if no tag exists
-
-	dirty, err := m.Uncommitted(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	message, err := m.GetCommitMessage(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	author, err := m.GetCommitAuthor(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	date, err := m.GetCommitDate(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	modifiedFiles, err := m.GetModifiedFiles(ctx, false)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get modified files: %w", err)
-	}
-
-	return &GitInfo{
-		Commit:        commit,
-		Branch:        branch,
-		Tag:           tag,
-		Dirty:         dirty,
-		Message:       message,
-		Author:        author,
-		Date:          date,
-		ModifiedFiles: modifiedFiles,
-	}, nil
-}
-
-func (m *Gitlocal) git() *dagger.Container {
-	return dag.Apko().Wolfi().
+	ctr := dag.Apko().Wolfi().
 		WithPackages([]string{"git"}).
 		Container().
-		WithEntrypoint([]string{"git"})
+		WithDirectory("/src", m.Worktree).
+		WithWorkdir("/src").
+		WithEntrypoint([]string{"git"}).
+		WithExec(fullArgs, dagger.ContainerWithExecOpts{
+			UseEntrypoint: true,
+			Expect:        dagger.ReturnTypeAny,
+		})
+
+	exitCode, err := ctr.ExitCode(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get exit code: %w", err)
+	}
+
+	if exitCode != 0 {
+		stderr, _ := ctr.Stderr(ctx)
+		return "", fmt.Errorf("git command failed (exit %d): %s",
+			exitCode, strings.TrimSpace(stderr))
+	}
+
+	result, err := ctr.Stdout(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to read git stdout: %w", err)
+	}
+
+	return result, nil
 }

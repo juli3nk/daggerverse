@@ -18,14 +18,6 @@ func (m *Go) Build(
 	name string,
 	// Go packages
 	packages []string,
-	// +optional
-	// +default="1"
-	cgoEnabled string,
-	// +optional
-	// +default=false
-	musl bool,
-	// +optional
-	ldflags []string,
 	// The arch to build for
 	// +optional
 	arch string,
@@ -33,6 +25,11 @@ func (m *Go) Build(
 	// +optional
 	// +default="linux"
 	os string,
+	// +optional
+	// +default=false
+	static bool,
+	// +optional
+	ldflags []string,
 ) *dagger.File {
 	if arch == "" {
 		arch = runtime.GOARCH
@@ -41,13 +38,20 @@ func (m *Go) Build(
 	binaryName := fmt.Sprintf("%s-%s-%s", name, os, arch)
 	binaryPath := fmt.Sprintf("build/%s", binaryName)
 
+	cgoEnabled := "0"
+	musl := false
+	if static {
+		cgoEnabled = "1"
+		musl = true
+	}
+
 	goBuildLdflags := ldflags
 	if musl {
 		goBuildLdflags = append(goBuildLdflags, "-linkmode", "external")
 	}
 	goBuildLdflags = append(goBuildLdflags, "-extldflags", "-static", "-s", "-w")
 
-	ctr := m.baseContainer(os, arch, cgoEnabled, musl)
+	ctr := m.buildEnv(os, arch, cgoEnabled, musl)
 
 	args := []string{
 		"go",
@@ -73,10 +77,10 @@ func (m *Go) BuildMulti(
 	// +default=["linux/amd64","linux/arm64"]
 	platforms []string,
 	// +optional
-	ldflags []string,
+	// +default=true
+	static bool,
 	// +optional
-	// +default=false
-	musl bool,
+	ldflags []string,
 ) *dagger.Directory {
 	if len(platforms) == 0 {
 		platforms = []string{"linux/amd64", "linux/arm64"}
@@ -91,12 +95,7 @@ func (m *Go) BuildMulti(
 		}
 		os, arch := parts[0], parts[1]
 
-		cgoEnabled := "0"
-		if musl {
-			cgoEnabled = "1"
-		}
-
-		binary := m.Build(ctx, name, packages, cgoEnabled, musl, ldflags, arch, os)
+		binary := m.Build(ctx, name, packages, arch, os, static, ldflags)
 		binaryName := fmt.Sprintf("%s-%s-%s", name, os, arch)
 
 		output = output.WithFile(fmt.Sprintf("bin/%s/%s", platform, binaryName), binary)
@@ -106,7 +105,7 @@ func (m *Go) BuildMulti(
 }
 
 // baseContainer creates a base container with Go toolchain configured
-func (m *Go) baseContainer(goos, goarch, cgoEnabled string, musl bool) *dagger.Container {
+func (m *Go) buildEnv(goos, goarch, cgoEnabled string, musl bool) *dagger.Container {
 	ctr := dag.Container().From(fmt.Sprintf("golang:%s", m.Version))
 
 	if musl {
@@ -119,11 +118,12 @@ func (m *Go) baseContainer(goos, goarch, cgoEnabled string, musl bool) *dagger.C
 			})
 
 		if goarch == "arm64" {
-			ctr = ctr.WithExec([]string{
-				"/bin/sh", "-c",
-				`curl -sfL https://musl.cc/aarch64-linux-musl-cross.tgz | tar -xzC /opt`,
-			})
 			envCC = "/opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc"
+			ctr = ctr.
+				WithExec([]string{
+					"/bin/sh", "-c",
+					`curl -sfL https://musl.cc/aarch64-linux-musl-cross.tgz | tar -xzC /opt`,
+				})
 		}
 
 		ctr = ctr.WithEnvVariable("CC", envCC)

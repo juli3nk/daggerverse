@@ -26,8 +26,10 @@ func (m *Docker) Build(
 		var args []dagger.BuildArg
 
 		for _, arg := range buildArgs {
-			nv := strings.Split(arg, "=")
-
+			nv := strings.SplitN(arg, "=", 2)
+			if len(nv) != 2 {
+				continue
+			}
 			args = append(args, dagger.BuildArg{Name: nv[0], Value: nv[1]})
 		}
 		opts.BuildArgs = args

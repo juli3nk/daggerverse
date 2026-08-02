@@ -74,6 +74,9 @@ func (m *Builder) Create(
 	if scratch {
 		image = image.WithRootfs(rootfs)
 	} else {
+		if from == "" {
+			return nil, fmt.Errorf("base image is required when scratch=false")
+		}
 		image = image.From(from)
 	}
 

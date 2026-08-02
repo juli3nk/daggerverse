@@ -42,6 +42,6 @@ func (m *Terraform) Lint(
 		From(containerImage).
 		WithMountedDirectory("/mnt", dir).
 		WithWorkdir("/mnt").
-		WithExec([]string{src}).
+		WithExec([]string{"validate", src}).
 		Stdout(ctx)
 }

@@ -102,7 +102,7 @@ func publishImageConfig(
 
 func validateRegistryParams(address, namespace, username string, secret *dagger.Secret) error {
 	if address == "" {
-		return nil // No registry = OK
+		return fmt.Errorf("registry address is required")
 	}
 
 	if namespace == "" {

@@ -45,17 +45,12 @@ func (m *SemanticRelease) Run(
 		execArgs = append(execArgs, "--debug")
 	}
 
-	secretRepoToken, err := repoTokenSecret.Plaintext(ctx)
-	if err != nil {
-		return "", err
-	}
-
 	return dag.Container().
 		From("ghcr.io/juli3nk/semantic-release:main").
 		WithMountedDirectory("/data", source).
 		WithWorkdir("/data").
 		WithEnvVariable("CI", "true").
-		WithEnvVariable(repoTokenEnvVarName, secretRepoToken).
+		WithSecretVariable(repoTokenEnvVarName, repoTokenSecret).
 		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
 		Stdout(ctx)
 }

@@ -1,5 +1,5 @@
 {
-  "name": "shfmt",
+  "name": "shell",
   "engineVersion": "v0.19.8",
   "sdk": {
     "source": "go"

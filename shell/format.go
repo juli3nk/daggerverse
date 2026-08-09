@@ -4,13 +4,11 @@ import (
 	"context"
 	"strconv"
 
-	"dagger/shfmt/internal/dagger"
+	"dagger/shell/internal/dagger"
 )
 
-type Shfmt struct{}
-
 // Format formats shell scripts using shfmt
-func (m *Shfmt) Fmt(
+func (m *Shell) Fmt(
 	ctx context.Context,
 	source *dagger.Directory,
 

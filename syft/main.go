@@ -22,6 +22,8 @@ func (m *Syft) SBOM(
 		From("anchore/syft:latest").
 		WithMountedDirectory("/src", source).
 		WithWorkdir("/src").
-		WithExec([]string{"syft", ".", "-o", format}).
+		WithExec([]string{".", "-o", fmt.Sprintf("%s=/src/sbom.%s", format, format}), dagger.ContainerWithExecOpts{
+			UseEntrypoint: true,
+		}).
 		File(fmt.Sprintf("/src/sbom.%s", format)), nil
 }

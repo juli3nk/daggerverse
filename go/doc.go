@@ -12,6 +12,6 @@ func (m *Go) GenerateDocs(ctx context.Context) *dagger.Directory {
 		From("golang:"+m.Version).
 		WithMountedDirectory("/src", m.Worktree).
 		WithWorkdir("/src").
-		WithExec([]string{"go", "doc", "-all"}).
+		WithExec([]string{"/bin/sh", "-c", "mkdir -p docs && for pkg in $(go list ./...); do echo \"# $pkg\" >> docs/api.txt; go doc -all \"$pkg\" >> docs/api.txt; done"}).
 		Directory("/src/docs")
 }

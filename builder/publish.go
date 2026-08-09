@@ -10,9 +10,9 @@ import (
 )
 
 type ImagePublishConfig struct {
-	name       string
-	containers []*dagger.Container
-	latest     bool
+	Name       string
+	Containers []*dagger.Container
+	Latest     bool
 }
 
 // PublishContainer publishes a container image to a registry
@@ -36,7 +36,7 @@ func (m *Builder) PublishImage(
 	errorsChan := make(chan error, len(imageConfigs))
 
 	for _, config := range imageConfigs {
-		if len(config.containers) == 0 {
+		if len(config.Containers) == 0 {
 			continue // Skip if no containers for this type
 		}
 
@@ -75,13 +75,13 @@ func publishImageConfig(
 	registryAddress string,
 	registryNamespace string,
 ) error {
-	imageName := fmt.Sprintf("%s/%s/%s", registryAddress, registryNamespace, config.name)
+	imageName := fmt.Sprintf("%s/%s/%s", registryAddress, registryNamespace, config.Name)
 
 	imageNameTags := []string{
 		fmt.Sprintf("%s:%s", imageName, version),
 	}
 
-	if config.latest {
+	if config.Latest {
 		imageNameTags = append(imageNameTags, fmt.Sprintf("%s:latest", imageName))
 	}
 
@@ -89,7 +89,7 @@ func publishImageConfig(
 	for _, image := range imageNameTags {
 		fmt.Printf("Publishing %s...\n", image)
 		_, err := ctr.Publish(ctx, image, dagger.ContainerPublishOpts{
-			PlatformVariants: config.containers,
+			PlatformVariants: config.Containers,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to publish %s: %w", image, err)

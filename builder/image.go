@@ -31,7 +31,7 @@ type FileMapping struct {
 }
 
 type ImageBuildConfig struct {
-	Type          string
+	Kind          string
 	Directory     string
 	BinaryName    string
 	InjectVersion bool

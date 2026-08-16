@@ -1,0 +1,13 @@
+{
+  "name": "version",
+  "engineVersion": "v0.21.7",
+  "sdk": {
+    "source": "go"
+  },
+  "dependencies": [
+    {
+      "name": "gitlocal",
+      "source": "github.com/juli3nk/daggerverse/gitlocal"
+    }
+  ]
+}

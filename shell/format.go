@@ -8,6 +8,7 @@ import (
 )
 
 // Format formats shell scripts using shfmt
+// +check
 func (m *Shell) Fmt(
 	ctx context.Context,
 	source *dagger.Directory,

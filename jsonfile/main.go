@@ -8,6 +8,7 @@ import (
 
 type Jsonfile struct{}
 
+// +check
 func (m *Jsonfile) Lint(
 	ctx context.Context,
 	source *dagger.Directory,

@@ -11,6 +11,7 @@ var toolsFormatter = []string{
 	"isort",
 }
 
+// +check
 func (m *Python) Fmt(
 	ctx context.Context,
 	tool string,

@@ -6,6 +6,7 @@ import (
 )
 
 // Verify checks if go.mod and go.sum are tidy
+// +check
 func (m *Go) Verify(ctx context.Context) (string, error) {
 	return dag.Container().
 		From(fmt.Sprintf("golang:%s", m.Version)).

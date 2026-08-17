@@ -9,6 +9,7 @@ import (
 
 type Platformio struct{}
 
+// +check
 func (m *Platformio) Check(
 	ctx context.Context,
 	source *dagger.Directory,

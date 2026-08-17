@@ -13,6 +13,7 @@ var toolsLinter = []string{
 	"pylint",
 }
 
+// +check
 func (m *Python) Lint(
 	ctx context.Context,
 	tool string,

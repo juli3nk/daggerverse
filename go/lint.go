@@ -3,6 +3,7 @@ package main
 import "context"
 
 // Lint runs golangci-lint
+// +check
 func (m *Go) Lint(
 	ctx context.Context,
 	// +optional

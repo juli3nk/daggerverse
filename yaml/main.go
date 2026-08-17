@@ -8,6 +8,7 @@ import (
 
 type Yaml struct{}
 
+// +check
 func (m *Yaml) Fmt(
 	ctx context.Context,
 	source *dagger.Directory,
@@ -30,6 +31,7 @@ func (m *Yaml) Fmt(
 		Stdout(ctx)
 }
 
+// +check
 func (m *Yaml) Lint(
 	ctx context.Context,
 	source *dagger.Directory,

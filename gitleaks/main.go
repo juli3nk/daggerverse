@@ -9,6 +9,7 @@ import (
 type Gitleaks struct{}
 
 // Detect scans for secrets
+// +check
 func (m *Gitleaks) Detect(
 	ctx context.Context,
 	source *dagger.Directory,

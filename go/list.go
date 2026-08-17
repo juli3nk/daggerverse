@@ -3,6 +3,7 @@ package main
 import "context"
 
 // ScanDependencies checks for outdated dependencies
+// +check
 func (m *Go) ScanDependencies(ctx context.Context) (string, error) {
 	return dag.Container().
 		From("golang:"+m.Version).

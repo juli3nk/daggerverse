@@ -6,6 +6,7 @@ import (
 )
 
 // Fmt formats Go code (check mode)
+// +check
 func (m *Go) Fmt(
 	ctx context.Context,
 	// +optional

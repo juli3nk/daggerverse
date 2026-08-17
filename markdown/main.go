@@ -8,6 +8,7 @@ import (
 type Markdown struct{}
 
 // ValidateMarkdown validates markdown files
+// +check
 func (m *Markdown) Lint(
 	ctx context.Context,
 	source *dagger.Directory,

@@ -11,10 +11,11 @@ type Jsonfile struct{}
 // +check
 func (m *Jsonfile) Lint(
 	ctx context.Context,
+	// +defaultPath="."
 	source *dagger.Directory,
 	// +optional
 	filedir []string,
-) (string, error) {
+) error {
 	execArgs := []string{
 		"jsonlint",
 		"--diff",
@@ -26,10 +27,12 @@ func (m *Jsonfile) Lint(
 		execArgs = append(execArgs, ".")
 	}
 
-	return dag.Container().
+	_, err := dag.Container().
 		From("pipelinecomponents/jsonlint:latest").
 		WithMountedDirectory("/src", source).
 		WithWorkdir("/src").
 		WithExec(execArgs).
-		Stdout(ctx)
+		Sync(ctx)
+
+	return err
 }

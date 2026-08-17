@@ -12,6 +12,7 @@ type Gitleaks struct{}
 // +check
 func (m *Gitleaks) Detect(
 	ctx context.Context,
+	// +defaultPath="."
 	source *dagger.Directory,
 	// +optional
 	exitCode string,
@@ -19,7 +20,7 @@ func (m *Gitleaks) Detect(
 	reportFormat string,
 	// +optional
 	verbose bool,
-) (string, error) {
+) error {
 	execArgs := []string{
 		"gitleaks",
 		"detect",
@@ -35,11 +36,12 @@ func (m *Gitleaks) Detect(
 		execArgs = append(execArgs, "--verbose")
 	}
 
-	return dag.Container().
-		From("zricethezav/gitleaks:latest").
+	_, err := dag.Container().
 		From("ghcr.io/gitleaks/gitleaks:latest").
 		WithMountedDirectory("/src", source).
 		WithWorkdir("/src").
 		WithExec(execArgs).
-		Stdout(ctx)
+		Sync(ctx)
+
+	return err
 }

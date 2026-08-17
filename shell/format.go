@@ -11,6 +11,7 @@ import (
 // +check
 func (m *Shell) Fmt(
 	ctx context.Context,
+	// +defaultPath="."
 	source *dagger.Directory,
 
 	// Generic flags
@@ -50,7 +51,7 @@ func (m *Shell) Fmt(
 	funcNextLine bool,
 	// +optional
 	minify bool,
-) (string, error) {
+) error {
 	execArgs := []string{"shfmt"}
 
 	// Generic flags
@@ -122,10 +123,12 @@ func (m *Shell) Fmt(
 	// Ajouter le répertoire à formater
 	execArgs = append(execArgs, ".")
 
-	return dag.Container().
+	_, err := dag.Container().
 		From("mvdan/shfmt:latest").
 		WithMountedDirectory("/src", source).
 		WithWorkdir("/src").
 		WithExec(execArgs).
-		Stdout(ctx)
+		Sync(ctx)
+
+	return err
 }

@@ -8,16 +8,18 @@ func (m *Go) Lint(
 	ctx context.Context,
 	// +optional
 	filedir []string,
-) (string, error) {
+) error {
 	execArgs := []string{"golangci-lint", "run", "-v"}
 	if len(filedir) > 0 {
 		execArgs = append(execArgs, filedir...)
 	}
 
-	return dag.Container().
+	_, err := dag.Container().
 		From("golangci/golangci-lint:latest").
 		WithMountedDirectory("/src", m.Worktree).
 		WithWorkdir("/src").
 		WithExec(execArgs).
-		Stdout(ctx)
+		Sync(ctx)
+
+	return err
 }

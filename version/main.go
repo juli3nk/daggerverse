@@ -56,6 +56,7 @@ func (m *Version) Resolve(
 func (m *Version) ResolveFromSource(
 	ctx context.Context,
 	// Source directory containing a git repository.
+	// +defaultPath="."
 	source *dagger.Directory,
 	// Explicit version override. If empty, version is auto-detected from git metadata.
 	// +optional

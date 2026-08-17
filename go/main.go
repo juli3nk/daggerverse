@@ -9,7 +9,9 @@ type Go struct {
 
 func New(
 	// Go version
+	// +default="1.26.1"
 	version string,
+	// +defaultPath="."
 	source *dagger.Directory,
 ) *Go {
 	return &Go{Version: version, Worktree: source}

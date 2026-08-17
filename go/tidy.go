@@ -7,12 +7,14 @@ import (
 
 // Verify checks if go.mod and go.sum are tidy
 // +check
-func (m *Go) Verify(ctx context.Context) (string, error) {
-	return dag.Container().
+func (m *Go) Verify(ctx context.Context) error {
+	_, err := dag.Container().
 		From(fmt.Sprintf("golang:%s", m.Version)).
 		WithMountedDirectory("/src", m.Worktree).
 		WithWorkdir("/src").
 		WithMountedCache("/go/pkg/mod", dag.CacheVolume(fmt.Sprintf("go-mod-%s", m.Version))).
 		WithExec([]string{"go", "mod", "verify"}).
-		Stdout(ctx)
+		Sync(ctx)
+
+	return err
 }

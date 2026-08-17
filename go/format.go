@@ -11,7 +11,7 @@ func (m *Go) Fmt(
 	ctx context.Context,
 	// +optional
 	filedir []string,
-) (string, error) {
+) error {
 	execArgs := []string{"gofmt", "-l"}
 	if len(filedir) > 0 {
 		execArgs = append(execArgs, filedir...)
@@ -19,10 +19,12 @@ func (m *Go) Fmt(
 		execArgs = append(execArgs, ".")
 	}
 
-	return dag.Container().
+	_, err := dag.Container().
 		From(fmt.Sprintf("golang:%s", m.Version)).
 		WithMountedDirectory("/src", m.Worktree).
 		WithWorkdir("/src").
 		WithExec(execArgs).
-		Stdout(ctx)
+		Sync(ctx)
+
+	return err
 }

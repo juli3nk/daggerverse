@@ -11,10 +11,11 @@ type Yaml struct{}
 // +check
 func (m *Yaml) Fmt(
 	ctx context.Context,
+	// +defaultPath="."
 	source *dagger.Directory,
 	// +optional
 	filedir []string,
-) (string, error) {
+) error {
 	var execArgs []string
 
 	if len(filedir) > 0 {
@@ -23,21 +24,24 @@ func (m *Yaml) Fmt(
 		execArgs = append(execArgs, ".")
 	}
 
-	return dag.Container().
+	_, err := dag.Container().
 		From("cytopia/yamlfmt:stable").
 		WithMountedDirectory("/mnt", source).
 		WithWorkdir("/mnt").
 		WithExec(execArgs).
-		Stdout(ctx)
+		Sync(ctx)
+
+	return err
 }
 
 // +check
 func (m *Yaml) Lint(
 	ctx context.Context,
+	// +defaultPath="."
 	source *dagger.Directory,
 	// +optional
 	filedir []string,
-) (string, error) {
+) error {
 	execArgs := []string{
 		"yamllint",
 		"--diff",
@@ -49,10 +53,12 @@ func (m *Yaml) Lint(
 		execArgs = append(execArgs, ".")
 	}
 
-	return dag.Container().
+	_, err := dag.Container().
 		From("pipelinecomponents/yamllint:latest").
 		WithMountedDirectory("/src", source).
 		WithWorkdir("/src").
 		WithExec(execArgs).
-		Stdout(ctx)
+		Sync(ctx)
+
+	return err
 }

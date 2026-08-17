@@ -1,7 +1,8 @@
 {
   "name": "builder",
-  "engineVersion": "v0.18.16",
+  "engineVersion": "v0.21.8",
   "sdk": {
     "source": "go"
-  }
+  },
+  "disableDefaultFunctionCaching": true
 }

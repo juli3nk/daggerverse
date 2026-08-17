@@ -1,0 +1,7 @@
+{
+  "name": "goreleaser",
+  "engineVersion": "v0.21.8",
+  "sdk": {
+    "source": "go"
+  }
+}

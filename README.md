@@ -7,6 +7,7 @@
 * gitleaks
 * gitlocal
 * go
+* goreleaser
 * jsonfile
 * markdown
 * platformio

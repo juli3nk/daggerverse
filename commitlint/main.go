@@ -15,18 +15,66 @@ func (m *Commitlint) Lint(
 	// +defaultPath="."
 	source *dagger.Directory,
 	// +optional
-	// A list of arguments to pass to commitlint.
-	args []string,
+	config string,
+	// +optional
+	// +default=false
+	defaultConfig bool,
+	// +optional
+	from string,
+	// +optional
+	// +default=false
+	fromLastTag bool,
+	// +optional
+	// +default=false
+	last bool,
+	// +optional
+	// +default=false
+	quiet bool,
+	// +optional
+	to string,
+	// +optional
+	// +default=false
+	strict bool,
 ) error {
-	if len(args) == 0 {
-		args = append(args, "--last")
+	var execArgs []string
+
+	if config != "" {
+		execArgs = append(execArgs, "--config", config)
+	}
+
+	if defaultConfig && config == "" {
+		execArgs = append(execArgs, "--default-config")
+	}
+
+	if from != "" {
+		execArgs = append(execArgs, "--from", from)
+	}
+
+	if fromLastTag && from == "" {
+		execArgs = append(execArgs, "--from-last-tag")
+	}
+
+	if last && from == "" && !fromLastTag {
+		execArgs = append(execArgs, "--last")
+	}
+
+	if quiet {
+		execArgs = append(execArgs, "--quiet")
+	}
+
+	if to != "" {
+		execArgs = append(execArgs, "--to", to)
+	}
+
+	if strict {
+		execArgs = append(execArgs, "--strict")
 	}
 
 	_, err := dag.Container().
 		From("commitlint/commitlint:latest").
 		WithMountedDirectory("/src", source).
 		WithWorkdir("/src").
-		WithExec(args, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
+		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
 		Sync(ctx)
 
 	return err

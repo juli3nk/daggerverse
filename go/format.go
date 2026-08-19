@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 )
 
@@ -9,12 +10,21 @@ import (
 // +check
 func (m *Go) Fmt(
 	ctx context.Context,
+	// If empty, formats the entire module.
+	// Otherwise, expects a JSON array of paths: '["a.go","b.go"]'
 	// +optional
-	filedir []string,
+	pathsJson string,
 ) error {
 	execArgs := []string{"gofmt", "-l"}
-	if len(filedir) > 0 {
-		execArgs = append(execArgs, filedir...)
+
+	if pathsJson != "" {
+		var paths []string
+		if err := json.Unmarshal([]byte(pathsJson), &paths); err != nil {
+			return fmt.Errorf("invalid pathsJson (expected JSON array): %w", err)
+		}
+		if len(paths) > 0 {
+			execArgs = append(execArgs, paths...)
+		}
 	} else {
 		execArgs = append(execArgs, ".")
 	}

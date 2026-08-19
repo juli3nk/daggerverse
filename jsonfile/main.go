@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"dagger/jsonfile/internal/dagger"
 )
@@ -13,16 +15,21 @@ func (m *Jsonfile) Lint(
 	ctx context.Context,
 	// +defaultPath="."
 	source *dagger.Directory,
+	// If empty, lints the entire module.
+	// Otherwise, expects a JSON array of paths: '["a.json","b.json"]'
 	// +optional
-	filedir []string,
+	pathsJson string,
 ) error {
-	execArgs := []string{
-		"jsonlint",
-		"--diff",
-	}
+	execArgs := []string{"jsonlint", "--diff"}
 
-	if len(filedir) > 0 {
-		execArgs = append(execArgs, filedir...)
+	if pathsJson != "" {
+		var paths []string
+		if err := json.Unmarshal([]byte(pathsJson), &paths); err != nil {
+			return fmt.Errorf("invalid pathsJson (expected JSON array): %w", err)
+		}
+		if len(paths) > 0 {
+			execArgs = append(execArgs, paths...)
+		}
 	} else {
 		execArgs = append(execArgs, ".")
 	}

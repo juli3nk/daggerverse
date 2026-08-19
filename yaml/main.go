@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"dagger/yaml/internal/dagger"
 )
@@ -13,13 +15,21 @@ func (m *Yaml) Fmt(
 	ctx context.Context,
 	// +defaultPath="."
 	source *dagger.Directory,
+	// If empty, formats the entire module.
+	// Otherwise, expects a JSON array of paths: '["a.go","b.go"]'
 	// +optional
-	filedir []string,
+	pathsJson string,
 ) error {
 	var execArgs []string
 
-	if len(filedir) > 0 {
-		execArgs = append(execArgs, filedir...)
+	if pathsJson != "" {
+		var paths []string
+		if err := json.Unmarshal([]byte(pathsJson), &paths); err != nil {
+			return fmt.Errorf("invalid pathsJson (expected JSON array): %w", err)
+		}
+		if len(paths) > 0 {
+			execArgs = append(execArgs, paths...)
+		}
 	} else {
 		execArgs = append(execArgs, ".")
 	}
@@ -39,16 +49,21 @@ func (m *Yaml) Lint(
 	ctx context.Context,
 	// +defaultPath="."
 	source *dagger.Directory,
+	// If empty, lints the entire module.
+	// Otherwise, expects a JSON array of paths: '["a.go","b.go"]'
 	// +optional
-	filedir []string,
+	pathsJson string,
 ) error {
-	execArgs := []string{
-		"yamllint",
-		"--diff",
-	}
+	execArgs := []string{"yamllint", "--diff"}
 
-	if len(filedir) > 0 {
-		execArgs = append(execArgs, filedir...)
+	if pathsJson != "" {
+		var paths []string
+		if err := json.Unmarshal([]byte(pathsJson), &paths); err != nil {
+			return fmt.Errorf("invalid pathsJson (expected JSON array): %w", err)
+		}
+		if len(paths) > 0 {
+			execArgs = append(execArgs, paths...)
+		}
 	} else {
 		execArgs = append(execArgs, ".")
 	}

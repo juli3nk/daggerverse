@@ -25,6 +25,7 @@ type HeadInfo struct {
 //   - Autre erreur git -> erreur.
 func (m *Gitlocal) HeadInfo(
 	ctx context.Context,
+	// +defaultPath="."
 	repo *dagger.Directory,
 ) (*HeadInfo, error) {
 	info := &HeadInfo{}

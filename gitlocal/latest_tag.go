@@ -12,6 +12,7 @@ import (
 // Returns an empty string if no tags exist (without error).
 func (m *Gitlocal) LatestTag(
 	ctx context.Context,
+	// +defaultPath="."
 	repo *dagger.Directory,
 ) (string, error) {
 	stdout, stderr, exitCode, err := m.gitRaw(ctx, repo,

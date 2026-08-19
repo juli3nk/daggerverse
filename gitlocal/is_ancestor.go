@@ -17,6 +17,7 @@ import (
 //   - Si tout existe → true/false selon le graphe de commits.
 func (m *Gitlocal) IsAncestor(
 	ctx context.Context,
+	// +defaultPath="."
 	repo *dagger.Directory,
 	ancestorRef string,
 	descendantRef string,

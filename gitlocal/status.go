@@ -24,6 +24,7 @@ type Status struct {
 //   - Si autre erreur git -> erreur.
 func (m *Gitlocal) Status(
 	ctx context.Context,
+	// +defaultPath="."
 	repo *dagger.Directory,
 ) (*Status, error) {
 	stdout, stderr, exitCode, err := m.gitRaw(ctx, repo,

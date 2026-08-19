@@ -10,6 +10,7 @@ type SemanticRelease struct{}
 
 func (m *SemanticRelease) Run(
 	ctx context.Context,
+	// +defaultPath="."
 	source *dagger.Directory,
 	repoTokenEnvVarName string,
 	repoTokenSecret *dagger.Secret,

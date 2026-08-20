@@ -31,7 +31,7 @@ func (m *Gitlocal) HeadInfo(
 	info := &HeadInfo{}
 
 	// 1) Vérifier qu’on est bien dans un repo + récupérer la ref symbolique de HEAD
-	stdout, stderr, exitCode, err := m.gitRaw(ctx, repo,
+	stdout, stderr, exitCode, err := gitRaw(ctx, repo,
 		[]string{"rev-parse", "--symbolic-full-name", "HEAD"},
 	)
 	if err != nil {
@@ -56,7 +56,7 @@ func (m *Gitlocal) HeadInfo(
 	}
 
 	// 2) Récupérer le nom de branche “humain” ou détecter HEAD détaché
-	stdout, stderr, exitCode, err = m.gitRaw(ctx, repo,
+	stdout, stderr, exitCode, err = gitRaw(ctx, repo,
 		[]string{"rev-parse", "--abbrev-ref", "HEAD"},
 	)
 	if err != nil {
@@ -79,7 +79,7 @@ func (m *Gitlocal) HeadInfo(
 	}
 
 	// 3) SHA de HEAD (peut échouer si repo sans commit)
-	stdout, stderr, exitCode, err = m.gitRaw(ctx, repo,
+	stdout, stderr, exitCode, err = gitRaw(ctx, repo,
 		[]string{"rev-parse", "HEAD"},
 	)
 	if err != nil {

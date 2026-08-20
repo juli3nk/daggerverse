@@ -27,7 +27,7 @@ func (m *Gitlocal) Status(
 	// +defaultPath="."
 	repo *dagger.Directory,
 ) (*Status, error) {
-	stdout, stderr, exitCode, err := m.gitRaw(ctx, repo,
+	stdout, stderr, exitCode, err := gitRaw(ctx, repo,
 		[]string{"status", "--porcelain=v2", "--branch"},
 	)
 	if err != nil {

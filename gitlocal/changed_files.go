@@ -30,7 +30,7 @@ func (m *Gitlocal) ChangedFiles(
 	diffRange := fmt.Sprintf("%s...%s", baseRef, headRef)
 
 	// ── 1. Diff entre les deux refs ──
-	stdout, stderr, exitCode, err := m.gitRaw(ctx, repo,
+	stdout, stderr, exitCode, err := gitRaw(ctx, repo,
 		[]string{"diff", "--name-only", diffRange},
 	)
 	if err != nil {
@@ -48,7 +48,7 @@ func (m *Gitlocal) ChangedFiles(
 
 	// ── 2. Changements non commités (worktree + index) ──
 	if headRef == "" || headRef == "HEAD" {
-		stdout, stderr, exitCode, err = m.gitRaw(ctx, repo,
+		stdout, stderr, exitCode, err = gitRaw(ctx, repo,
 			[]string{"diff", "--name-only", "HEAD"},
 		)
 		if err != nil {
@@ -63,7 +63,7 @@ func (m *Gitlocal) ChangedFiles(
 		}
 
 		// Bonus : fichiers untracked (optionnel mais utile en local)
-		stdout, _, exitCode, err = m.gitRaw(ctx, repo,
+		stdout, _, exitCode, err = gitRaw(ctx, repo,
 			[]string{"ls-files", "--others", "--exclude-standard"},
 		)
 		if err == nil && exitCode == 0 {

@@ -10,7 +10,7 @@ import (
 
 type Gitlocal struct{}
 
-func (m *Gitlocal) gitRaw(
+func gitRaw(
 	ctx context.Context,
 	worktree *dagger.Directory,
 	execArgs []string,
@@ -52,7 +52,7 @@ func (m *Gitlocal) git(
 	worktree *dagger.Directory,
 	execArgs []string,
 ) (string, error) {
-	stdout, stderr, exitCode, err := m.gitRaw(ctx, worktree, execArgs)
+	stdout, stderr, exitCode, err := gitRaw(ctx, worktree, execArgs)
 	if err != nil {
 		return "", err
 	}

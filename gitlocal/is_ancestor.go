@@ -38,7 +38,7 @@ func (m *Gitlocal) IsAncestor(
 	}
 
 	// Ensuite on délègue à git merge-base --is-ancestor.
-	_, stderr, exitCode, err := m.gitRaw(ctx, repo,
+	_, stderr, exitCode, err := gitRaw(ctx, repo,
 		[]string{"merge-base", "--is-ancestor", ancestorRef, descendantRef},
 	)
 	if err != nil {
@@ -69,7 +69,7 @@ func (m *Gitlocal) ensureRefExists(
 	label string,
 	ref string,
 ) error {
-	_, stderr, exitCode, err := m.gitRaw(ctx, repo,
+	_, stderr, exitCode, err := gitRaw(ctx, repo,
 		[]string{"rev-parse", "--verify", ref},
 	)
 	if err != nil {

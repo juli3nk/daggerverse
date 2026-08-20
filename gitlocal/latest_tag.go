@@ -15,7 +15,7 @@ func (m *Gitlocal) LatestTag(
 	// +defaultPath="."
 	repo *dagger.Directory,
 ) (string, error) {
-	stdout, stderr, exitCode, err := m.gitRaw(ctx, repo,
+	stdout, stderr, exitCode, err := gitRaw(ctx, repo,
 		[]string{"describe", "--tags", "--abbrev=0"},
 	)
 	if err != nil {

@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 
 	"dagger/gitlocal/internal/dagger"
-
-	"github.com/juli3nk/go-utils/filedir"
 )
 
 type ChangedFiles struct {
@@ -27,47 +28,52 @@ func (m *Gitlocal) ChangedFiles(
 	// +optional
 	ext []string,
 ) (*ChangedFiles, error) {
+
+	// ── 1. Diff entre les refs (avec fallback si HEAD~1 invalide) ──
 	diffRange := fmt.Sprintf("%s...%s", baseRef, headRef)
 
-	// ── 1. Diff entre les deux refs ──
 	stdout, stderr, exitCode, err := gitRaw(ctx, repo,
-		[]string{"diff", "--name-only", "--diff-filter=d", diffRange},
+		[]string{"diff", "--name-only", "--diff-filter=AMR", diffRange},
 	)
 	if err != nil {
 		return nil, err
 	}
 	if exitCode != 0 {
-		return nil, fmt.Errorf("git diff --name-only %s failed (exit %d): %s",
-			diffRange, exitCode, strings.TrimSpace(stderr))
+		// Fallback : si le range échoue (ex: shallow clone, repo à 1 commit),
+		// on prend juste les fichiers du dernier commit ou le worktree
+		stdout, stderr, exitCode, err = gitRaw(ctx, repo,
+			[]string{"diff", "--name-only", "--diff-filter=AMR", "HEAD"},
+		)
+		if err != nil || exitCode != 0 {
+			return nil, fmt.Errorf("git diff failed: %w (stderr: %s)", err, strings.TrimSpace(stderr))
+		}
 	}
 
 	fileSet := make(map[string]struct{})
 	for _, f := range getFiles(stdout) {
-		fileSet[f] = struct{}{}
-	}
-
-	// ── 2. Changements non commités (worktree + index) ──
-	if headRef == "" || headRef == "HEAD" {
-		stdout, stderr, exitCode, err = gitRaw(ctx, repo,
-			[]string{"diff", "--name-only", "--diff-filter=d", "HEAD"},
-		)
-		if err != nil {
-			return nil, err
-		}
-		if exitCode != 0 {
-			return nil, fmt.Errorf("git diff --name-only HEAD failed (exit %d): %s",
-				exitCode, strings.TrimSpace(stderr))
-		}
-		for _, f := range getFiles(stdout) {
+		if f != "" {
 			fileSet[f] = struct{}{}
 		}
+	}
 
-		// Bonus : fichiers untracked (optionnel mais utile en local)
-		stdout, _, exitCode, err = gitRaw(ctx, repo,
+	// ── 2. Worktree + untracked (si local) ──
+	if headRef == "" || headRef == "HEAD" {
+		// Modifiés/staged
+		stdout, _, _, _ := gitRaw(ctx, repo,
+			[]string{"diff", "--name-only", "--diff-filter=AMR", "HEAD"},
+		)
+		for _, f := range getFiles(stdout) {
+			if f != "" {
+				fileSet[f] = struct{}{}
+			}
+		}
+
+		// Untracked
+		stdout, _, _, _ = gitRaw(ctx, repo,
 			[]string{"ls-files", "--others", "--exclude-standard"},
 		)
-		if err == nil && exitCode == 0 {
-			for _, f := range getFiles(stdout) {
+		for _, f := range getFiles(stdout) {
+			if f != "" {
 				fileSet[f] = struct{}{}
 			}
 		}
@@ -78,36 +84,55 @@ func (m *Gitlocal) ChangedFiles(
 	for f := range fileSet {
 		modifiedFiles = append(modifiedFiles, f)
 	}
+	sort.Strings(modifiedFiles) // déterministe pour les tests
 
-	// ── 3. Groupage par extension ──
-
+	// ── 3. Groupage par extension (robuste) ──
 	exts := make(map[string][]string)
 	exts["all"] = modifiedFiles
 
+	// Construit la map : extension -> nom du groupe
+	// Ex: "go" -> "go", "yaml" -> "config", "yml" -> "config"
+	groupByExt := make(map[string]string)
 	for _, e := range ext {
 		parts := strings.SplitN(e, ":", 2)
-		name := parts[0]
-		var patterns []string
+		name := strings.TrimSpace(parts[0])
 
 		if len(parts) == 1 {
-			// --ext "go"  →  name="go", patterns=["go"]
-			patterns = []string{parts[0]}
+			groupByExt[name] = name
 		} else {
-			// --ext "code:go,mod"  →  name="code", patterns=["go","mod"]
-			for _, p := range strings.Split(parts[1], ",") {
-				patterns = append(patterns, strings.TrimSpace(p))
+			for _, rawExt := range strings.Split(parts[1], ",") {
+				extClean := strings.TrimSpace(rawExt)
+				if extClean != "" {
+					// Détection de conflit silencieuse
+					if existing, ok := groupByExt[extClean]; ok {
+						fmt.Fprintf(os.Stderr, "warning: extension %q already mapped to %q, overwriting with %q\n",
+							extClean, existing, name)
+					}
+					groupByExt[extClean] = name
+				}
 			}
 		}
+	}
 
-		var matched []string
-		for _, p := range patterns {
-			p = strings.TrimSpace(p)
-			files := filedir.FilterFileByExtensionOrName(modifiedFiles, "ext", p)
-			matched = append(matched, files...)
+	for _, f := range modifiedFiles {
+		ext := filepath.Ext(f)             // ".go", ".yaml", ""
+		ext = strings.TrimPrefix(ext, ".") // "go", "yaml", ""
+
+		if ext == "" {
+			continue // fichiers sans extension restent dans "all" seulement
 		}
 
-		if len(matched) > 0 {
-			exts[name] = matched
+		if groupName, ok := groupByExt[ext]; ok {
+			exts[groupName] = append(exts[groupName], f)
+		}
+	}
+
+	// ── 4. S'assure que tous les groupes demandés existent (même vides) ──
+	for _, e := range ext {
+		parts := strings.SplitN(e, ":", 2)
+		name := strings.TrimSpace(parts[0])
+		if _, ok := exts[name]; !ok {
+			exts[name] = []string{}
 		}
 	}
 

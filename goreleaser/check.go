@@ -9,10 +9,10 @@ func (m *Goreleaser) Check(
 	config string,
 	// +optional
 	// +default=false
-	quiet bool,
+	quietly bool,
 	// +optional
 	// +default=false
-	verbose bool,
+	verboseOutput bool,
 ) (string, error) {
 	var execArgs []string
 
@@ -20,11 +20,11 @@ func (m *Goreleaser) Check(
 		execArgs = append(execArgs, config)
 	}
 
-	if quiet {
+	if quietly {
 		execArgs = append(execArgs, "--quiet")
 	}
 
-	if verbose {
+	if verboseOutput {
 		execArgs = append(execArgs, "--verbose")
 	}
 

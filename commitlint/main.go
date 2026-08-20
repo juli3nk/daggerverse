@@ -29,7 +29,7 @@ func (m *Commitlint) Lint(
 	last bool,
 	// +optional
 	// +default=false
-	quiet bool,
+	quietly bool,
 	// +optional
 	to string,
 	// +optional
@@ -58,7 +58,7 @@ func (m *Commitlint) Lint(
 		execArgs = append(execArgs, "--last")
 	}
 
-	if quiet {
+	if quietly {
 		execArgs = append(execArgs, "--quiet")
 	}
 

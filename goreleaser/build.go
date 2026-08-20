@@ -44,7 +44,7 @@ func (m *Goreleaser) Build(
 	// Enable verbose mode
 	// +optional
 	// +default=false
-	verbose bool,
+	verboseOutput bool,
 ) (string, error) {
 	var execArgs []string
 
@@ -88,7 +88,7 @@ func (m *Goreleaser) Build(
 		execArgs = append(execArgs, "--timeout", timeout)
 	}
 
-	if verbose {
+	if verboseOutput {
 		execArgs = append(execArgs, "--verbose")
 	}
 

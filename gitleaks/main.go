@@ -19,7 +19,7 @@ func (m *Gitleaks) Detect(
 	// +optional
 	reportFormat string,
 	// +optional
-	verbose bool,
+	verboseOutput bool,
 ) error {
 	execArgs := []string{
 		"gitleaks",
@@ -32,7 +32,7 @@ func (m *Gitleaks) Detect(
 	if len(reportFormat) > 0 {
 		execArgs = append(execArgs, "--report-format", reportFormat)
 	}
-	if verbose {
+	if verboseOutput {
 		execArgs = append(execArgs, "--verbose")
 	}
 

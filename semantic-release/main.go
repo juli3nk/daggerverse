@@ -24,7 +24,7 @@ func (m *SemanticRelease) Run(
 	ci bool,
 	// +optional
 	// +default=false
-	debugMode bool,
+	enableDebug bool,
 ) (string, error) {
 	var execArgs []string
 
@@ -42,7 +42,7 @@ func (m *SemanticRelease) Run(
 		execArgs = append(execArgs, "--no-ci")
 	}
 
-	if debugMode {
+	if enableDebug {
 		execArgs = append(execArgs, "--debug")
 	}
 

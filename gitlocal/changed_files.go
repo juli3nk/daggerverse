@@ -31,7 +31,7 @@ func (m *Gitlocal) ChangedFiles(
 
 	// ── 1. Diff entre les deux refs ──
 	stdout, stderr, exitCode, err := gitRaw(ctx, repo,
-		[]string{"diff", "--name-only", diffRange},
+		[]string{"diff", "--name-only", "--diff-filter=d", diffRange},
 	)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (m *Gitlocal) ChangedFiles(
 	// ── 2. Changements non commités (worktree + index) ──
 	if headRef == "" || headRef == "HEAD" {
 		stdout, stderr, exitCode, err = gitRaw(ctx, repo,
-			[]string{"diff", "--name-only", "HEAD"},
+			[]string{"diff", "--name-only", "--diff-filter=d", "HEAD"},
 		)
 		if err != nil {
 			return nil, err
@@ -128,7 +128,9 @@ func (f *ChangedFiles) GithubOutput(ctx context.Context) string {
 	count := len(data) - 1
 	i := 0
 	for name, files := range data {
-		result += fmt.Sprintf("%s=%s", name, strings.Join(files, ","))
+		b, _ := json.Marshal(files)
+
+		result += fmt.Sprintf("%s=%s", name, string(b))
 		if i < count {
 			result += "\n"
 		}

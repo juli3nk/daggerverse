@@ -32,10 +32,7 @@ func (m *Go) ModCheck(ctx context.Context) error {
 	}
 
 	// go.sum peut ne pas exister (ex: pas de deps externe)
-	origSum := ""
-	if f, err := m.Worktree.File("go.sum"); err == nil {
-		origSum, _ = f.Contents(ctx)
-	}
+	origSum, _ := m.Worktree.File("go.sum").Contents(ctx)
 
 	// ── 4. go mod tidy dans le conteneur ──
 	tidyCtr := base.WithExec([]string{"go", "mod", "tidy"})
@@ -50,10 +47,7 @@ func (m *Go) ModCheck(ctx context.Context) error {
 		return fmt.Errorf("reading tidied go.mod: %w", err)
 	}
 
-	newSum := ""
-	if f, err := tidyCtr.File("/src/go.sum"); err == nil {
-		newSum, _ = f.Contents(ctx)
-	}
+	newSum, _ := tidyCtr.File("/src/go.sum").Contents(ctx)
 
 	// ── 6. Comparaison ──
 	if origMod != newMod || origSum != newSum {

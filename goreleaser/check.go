@@ -14,7 +14,7 @@ func (m *Goreleaser) Check(
 	// +default=false
 	verboseOutput bool,
 ) (string, error) {
-	var execArgs []string
+	execArgs := []string{"check"}
 
 	if config != "" {
 		execArgs = append(execArgs, config)

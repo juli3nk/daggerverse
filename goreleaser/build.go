@@ -46,7 +46,7 @@ func (m *Goreleaser) Build(
 	// +default=false
 	verboseOutput bool,
 ) (string, error) {
-	var execArgs []string
+	execArgs := []string{"build"}
 
 	if autoSnapshot {
 		execArgs = append(execArgs, "--auto-snapshot")

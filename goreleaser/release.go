@@ -66,7 +66,7 @@ func (m *Goreleaser) Release(
 	// +default=false
 	verboseOutput bool,
 ) (string, error) {
-	var execArgs []string
+	execArgs := []string{"release"}
 
 	if autoSnapshot {
 		execArgs = append(execArgs, "--auto-snapshot")

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-
 	"dagger/goreleaser/internal/dagger"
 )
 
@@ -17,11 +15,10 @@ func New(
 	return &Goreleaser{Worktree: source}
 }
 
-func (m *Goreleaser) run(ctx context.Context, execArgs []string) (string, error) {
+func (m *Goreleaser) run(execArgs []string) *dagger.Container {
 	return dag.Container().
 		From("ghcr.io/goreleaser/goreleaser:latest").
 		WithMountedDirectory("/data", m.Worktree).
 		WithWorkdir("/data").
-		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
-		Stdout(ctx)
+		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true})
 }

@@ -1,6 +1,10 @@
 package main
 
-import "context"
+import (
+	"context"
+
+	"dagger/goreleaser/internal/dagger"
+)
 
 func (m *Goreleaser) Build(
 	ctx context.Context,
@@ -45,7 +49,7 @@ func (m *Goreleaser) Build(
 	// +optional
 	// +default=false
 	verboseOutput bool,
-) (string, error) {
+) *dagger.Container {
 	execArgs := []string{"build"}
 
 	if autoSnapshot {
@@ -92,5 +96,5 @@ func (m *Goreleaser) Build(
 		execArgs = append(execArgs, "--verbose")
 	}
 
-	return m.run(ctx, execArgs)
+	return m.run(execArgs)
 }

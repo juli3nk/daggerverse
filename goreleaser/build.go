@@ -22,7 +22,7 @@ func (m *Goreleaser) Build(
 	// Only taken into account when using --single-target
 	// and a single id (either with --id or if configuration only has one build)
 	// +optional
-	output string,
+	outputPath string,
 	// Number of tasks to run concurrently (default: number of CPUs)
 	// +optional
 	parallelism string,
@@ -64,8 +64,8 @@ func (m *Goreleaser) Build(
 		execArgs = append(execArgs, "--id", id)
 	}
 
-	if output != "" {
-		execArgs = append(execArgs, "--output", output)
+	if outputPath != "" {
+		execArgs = append(execArgs, "--output", outputPath)
 	}
 
 	if parallelism != "" {

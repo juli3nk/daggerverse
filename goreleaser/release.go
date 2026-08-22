@@ -8,6 +8,8 @@ import (
 
 func (m *Goreleaser) Release(
 	ctx context.Context,
+	tokenEnv string,
+	token *dagger.Secret,
 	// Automatically sets --snapshot if the repository is dirty
 	// +optional
 	// +default=false
@@ -136,5 +138,7 @@ func (m *Goreleaser) Release(
 		execArgs = append(execArgs, "--verbose")
 	}
 
-	return m.run(execArgs)
+	ctr := m.run(execArgs)
+
+	return ctr.WithSecretVariable(tokenEnv, token)
 }

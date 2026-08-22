@@ -12,10 +12,10 @@ func (m *SemanticRelease) Run(
 	ctx context.Context,
 	// +defaultPath="."
 	source *dagger.Directory,
-	repoTokenEnvVarName string,
-	repoTokenSecret *dagger.Secret,
+	repoTokenEnv string,
+	repoToken *dagger.Secret,
 	// +optional
-	repositoryUrl string,
+	repoUrl string,
 	// +optional
 	// +default=false
 	dryRun bool,
@@ -28,8 +28,8 @@ func (m *SemanticRelease) Run(
 ) (string, error) {
 	var execArgs []string
 
-	if repositoryUrl != "" {
-		execArgs = append(execArgs, "--repository-url", repositoryUrl)
+	if repoUrl != "" {
+		execArgs = append(execArgs, "--repository-url", repoUrl)
 	}
 
 	if dryRun {
@@ -51,7 +51,7 @@ func (m *SemanticRelease) Run(
 		WithMountedDirectory("/data", source).
 		WithWorkdir("/data").
 		WithEnvVariable("CI", "true").
-		WithSecretVariable(repoTokenEnvVarName, repoTokenSecret).
+		WithSecretVariable(repoTokenEnv, repoToken).
 		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
 		Stdout(ctx)
 }

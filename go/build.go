@@ -25,12 +25,25 @@ func (m *Go) Build(
 	// +optional
 	// +default="linux"
 	os string,
+	// Enable CGO (requires a C toolchain)
 	// +optional
 	// +default=false
-	static bool,
+	cgo bool,
+	// Use musl-gcc for static C linking (implies static binary, only valid with cgo and os=linux)
+	// +optional
+	// +default=false
+	musl bool,
+	// Omit the symbol table (reduces size, breaks pprof function names and go tool nm)
+	// +optional
+	// +default=false
+	stripSymbols bool,
+	// Omit DWARF debug info (reduces size, breaks delve/gdb source-level debugging)
+	// +optional
+	// +default=false
+	stripDebug bool,
 	// +optional
 	ldflags []string,
-) *dagger.File {
+) (*dagger.File, error) {
 	if arch == "" {
 		arch = runtime.GOARCH
 	}
@@ -38,18 +51,39 @@ func (m *Go) Build(
 	binaryName := fmt.Sprintf("%s-%s-%s", name, os, arch)
 	binaryPath := fmt.Sprintf("build/%s", binaryName)
 
-	cgoEnabled := "0"
-	musl := false
-	if static {
-		cgoEnabled = "1"
-		musl = true
+	// Validation : musl sans CGO n'a pas de sens
+	if musl && !cgo {
+		return nil, fmt.Errorf("musl requires cgo to be enabled")
 	}
 
-	goBuildLdflags := ldflags
-	if musl {
-		goBuildLdflags = append(goBuildLdflags, "-linkmode", "external")
+	// Validation : musl est principalement une solution Linux
+	if musl && os != "linux" {
+		return nil, fmt.Errorf("musl static builds are only supported for linux, got %q", os)
 	}
-	goBuildLdflags = append(goBuildLdflags, "-extldflags", "-static", "-s", "-w")
+
+	cgoEnabled := "0"
+	if cgo {
+		cgoEnabled = "1"
+	}
+
+	// Construction des ldflags
+	goBuildLdflags := make([]string, len(ldflags))
+	copy(goBuildLdflags, ldflags)
+
+	// Si musl, on force le linking statique via le linker externe
+	if musl {
+		goBuildLdflags = append(goBuildLdflags,
+			"-linkmode", "external",
+			"-extldflags", "-static",
+		)
+	}
+
+	if stripSymbols {
+		goBuildLdflags = append(goBuildLdflags, "-s")
+	}
+	if stripDebug {
+		goBuildLdflags = append(goBuildLdflags, "-w")
+	}
 
 	ctr := m.buildEnv(os, arch, cgoEnabled, musl)
 
@@ -57,12 +91,11 @@ func (m *Go) Build(
 		"go",
 		"build",
 		"-o", binaryPath,
-		"-ldflags",
-		strings.Join(goBuildLdflags, " "),
+		"-ldflags", strings.Join(goBuildLdflags, " "),
 	}
 	args = append(args, packages...)
 
-	return ctr.WithExec(args).File(binaryPath)
+	return ctr.WithExec(args).File(binaryPath), nil
 }
 
 // BuildMulti builds binaries for multiple platforms
@@ -77,11 +110,20 @@ func (m *Go) BuildMulti(
 	// +default=["linux/amd64","linux/arm64"]
 	platforms []string,
 	// +optional
-	// +default=true
-	static bool,
+	// +default=false
+	cgo bool,
+	// +optional
+	// +default=false
+	musl bool,
+	// +optional
+	// +default=false
+	stripSymbols bool,
+	// +optional
+	// +default=false
+	stripDebug bool,
 	// +optional
 	ldflags []string,
-) *dagger.Directory {
+) (*dagger.Directory, error) {
 	if len(platforms) == 0 {
 		platforms = []string{"linux/amd64", "linux/arm64"}
 	}
@@ -95,38 +137,37 @@ func (m *Go) BuildMulti(
 		}
 		os, arch := parts[0], parts[1]
 
-		binary := m.Build(ctx, name, packages, arch, os, static, ldflags)
+		binary, err := m.Build(ctx, name, packages, arch, os, cgo, musl, stripSymbols, stripDebug, ldflags)
+		if err != nil {
+			return nil, err
+		}
 		binaryName := fmt.Sprintf("%s-%s-%s", name, os, arch)
 
 		output = output.WithFile(fmt.Sprintf("bin/%s/%s", platform, binaryName), binary)
 	}
 
-	return output
+	return output, nil
 }
 
 // baseContainer creates a base container with Go toolchain configured
 func (m *Go) buildEnv(goos, goarch, cgoEnabled string, musl bool) *dagger.Container {
 	ctr := dag.Container().From(fmt.Sprintf("golang:%s", m.Version))
 
+	// Installation de Zig (une seule fois, cross-compiler universel)
+	ctr = ctr.WithExec([]string{"sh", "-c", `
+        curl -sfL https://ziglang.org/download/0.13.0/zig-linux-$(uname -m)-0.13.0.tar.xz |
+        tar -xJ --strip-components=1 -C /usr/local
+    `})
+
+	target := fmt.Sprintf("%s-%s", goarch, goos)
+	if goos == "darwin" {
+		target = fmt.Sprintf("%s-macos", goarch) // zig syntax
+	}
+
+	cc := fmt.Sprintf("zig cc -target %s", target)
 	if musl {
-		envCC := "musl-gcc"
-		ctr = ctr.
-			WithExec([]string{"apt-get", "update"}).
-			WithExec([]string{
-				"apt-get", "install", "--no-install-recommends", "--yes",
-				"musl", "musl-dev", "musl-tools",
-			})
-
-		if goarch == "arm64" {
-			envCC = "/opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc"
-			ctr = ctr.
-				WithExec([]string{
-					"/bin/sh", "-c",
-					`curl -sfL https://musl.cc/aarch64-linux-musl-cross.tgz | tar -xzC /opt`,
-				})
-		}
-
-		ctr = ctr.WithEnvVariable("CC", envCC)
+		// Zig intègre musl, pas besoin de l'installer
+		cc = fmt.Sprintf("zig cc -target %s-musl", target)
 	}
 
 	return ctr.
@@ -137,5 +178,6 @@ func (m *Go) buildEnv(goos, goarch, cgoEnabled string, musl bool) *dagger.Contai
 		WithEnvVariable("GOCACHE", "/go/build-cache").
 		WithEnvVariable("GOOS", goos).
 		WithEnvVariable("GOARCH", goarch).
-		WithEnvVariable("CGO_ENABLED", cgoEnabled)
+		WithEnvVariable("CGO_ENABLED", cgoEnabled).
+		WithEnvVariable("CC", cc)
 }

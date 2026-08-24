@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+	"slices"
 )
 
 // Lint runs golangci-lint
@@ -23,7 +25,14 @@ func (m *Go) Lint(
 			return fmt.Errorf("invalid pathsJson (expected JSON array): %w", err)
 		}
 		if len(paths) > 0 {
-			execArgs = append(execArgs, paths...)
+			var dirPaths []string
+			for _, p := range paths {
+				dp := filepath.Dir(p)
+				if !slices.Contains(dirPaths, dp) {
+					dirPaths = append(dirPaths, dp)
+				}
+			}
+			execArgs = append(execArgs, dirPaths...)
 		}
 	}
 

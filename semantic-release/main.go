@@ -52,7 +52,8 @@ func (m *SemanticRelease) Run(
 	ctr := dag.Container().
 		From("ghcr.io/juli3nk/semantic-release:main").
 		WithMountedDirectory("/data", source).
-		WithWorkdir("/data")
+		WithWorkdir("/data").
+		WithEnvVariable("CI", "true")
 
 	if githubAction {
 		ctr = ctr.WithEnvVariable("GITHUB_ACTION", "true")

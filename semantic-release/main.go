@@ -12,6 +12,9 @@ func (m *SemanticRelease) Run(
 	ctx context.Context,
 	// +defaultPath="."
 	source *dagger.Directory,
+	// +optional
+	// +default=false
+	githubAction bool,
 	repoTokenEnv string,
 	repoToken *dagger.Secret,
 	// +optional
@@ -46,12 +49,16 @@ func (m *SemanticRelease) Run(
 		execArgs = append(execArgs, "--debug")
 	}
 
-	return dag.Container().
+	ctr := dag.Container().
 		From("ghcr.io/juli3nk/semantic-release:main").
 		WithMountedDirectory("/data", source).
-		WithWorkdir("/data").
-		WithEnvVariable("CI", "true").
-		WithSecretVariable(repoTokenEnv, repoToken).
+		WithWorkdir("/data")
+
+	if githubAction {
+		ctr = ctr.WithEnvVariable("GITHUB_ACTION", "true")
+	}
+
+	return ctr.WithSecretVariable(repoTokenEnv, repoToken).
 		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true}).
 		Stdout(ctx)
 }

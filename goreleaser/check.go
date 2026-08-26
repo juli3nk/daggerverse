@@ -32,5 +32,6 @@ func (m *Goreleaser) Check(
 		execArgs = append(execArgs, "--verbose")
 	}
 
-	return m.run(execArgs)
+	return m.container().
+		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true})
 }

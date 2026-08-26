@@ -138,7 +138,7 @@ func (m *Goreleaser) Release(
 		execArgs = append(execArgs, "--verbose")
 	}
 
-	ctr := m.run(execArgs)
-
-	return ctr.WithSecretVariable(tokenEnv, token)
+	return m.container().
+		WithSecretVariable(tokenEnv, token).
+		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true})
 }

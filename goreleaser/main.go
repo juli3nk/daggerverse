@@ -15,10 +15,9 @@ func New(
 	return &Goreleaser{Worktree: source}
 }
 
-func (m *Goreleaser) run(execArgs []string) *dagger.Container {
+func (m *Goreleaser) container() *dagger.Container {
 	return dag.Container().
 		From("ghcr.io/goreleaser/goreleaser:latest").
 		WithMountedDirectory("/data", m.Worktree).
-		WithWorkdir("/data").
-		WithExec(execArgs, dagger.ContainerWithExecOpts{UseEntrypoint: true})
+		WithWorkdir("/data")
 }

@@ -5,9 +5,10 @@ import (
 	"fmt"
 )
 
-// Vulncheck scanne le module Go et ses dépendances via l'outil officiel.
-// Échoue (error non nil) si une vulnérabilité connue est détectée.
-func (m *Go) VulnCheck(ctx context.Context) error {
+// Vuln scans the Go module and its dependencies using the official tool.
+// Fails (returns a non-nil error) if a known vulnerability is detected.
+// +check
+func (m *Go) Vuln(ctx context.Context) error {
 	_, err := dag.Container().
 		From(fmt.Sprintf("golang:%s", m.Version)).
 		WithMountedDirectory("/src", m.Worktree).

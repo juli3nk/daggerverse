@@ -29,11 +29,9 @@ func (m *Gitlocal) ChangedFiles(
 	ext []string,
 ) (*ChangedFiles, error) {
 
-	// ── 1. Diff entre les refs (avec fallback si HEAD~1 invalide) ──
-	diffRange := fmt.Sprintf("%s...%s", baseRef, headRef)
-
+	// Diff entre les refs (avec fallback si HEAD~1 invalide)
 	stdout, stderr, exitCode, err := gitRaw(ctx, repo,
-		[]string{"diff", "--name-only", "--diff-filter=AMR", diffRange},
+		[]string{"diff", "--name-only", "--diff-filter=AMR", baseRef, headRef},
 	)
 	if err != nil {
 		return nil, err
@@ -56,7 +54,7 @@ func (m *Gitlocal) ChangedFiles(
 		}
 	}
 
-	// ── 2. Worktree + untracked (si local) ──
+	// Worktree + untracked (si local)
 	if headRef == "" || headRef == "HEAD" {
 		// Modifiés/staged
 		stdout, _, _, _ := gitRaw(ctx, repo,
@@ -86,7 +84,7 @@ func (m *Gitlocal) ChangedFiles(
 	}
 	sort.Strings(modifiedFiles) // déterministe pour les tests
 
-	// ── 3. Groupage par extension (robuste) ──
+	// Groupage par extension (robuste)
 	exts := make(map[string][]string)
 	exts["all"] = modifiedFiles
 
@@ -127,7 +125,7 @@ func (m *Gitlocal) ChangedFiles(
 		}
 	}
 
-	// ── 4. S'assure que tous les groupes demandés existent (même vides) ──
+	// S'assure que tous les groupes demandés existent (même vides)
 	for _, e := range ext {
 		parts := strings.SplitN(e, ":", 2)
 		name := strings.TrimSpace(parts[0])

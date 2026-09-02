@@ -3,12 +3,14 @@ module main
 go 1.26.1
 
 require (
-	github.com/99designs/gqlgen v0.17.89
 	github.com/Khan/genqlient v0.8.1
 	github.com/dagger/otel-go v1.43.0
 	github.com/vektah/gqlparser/v2 v2.5.32
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	golang.org/x/sync v0.20.0
+)
+
+require (
+	github.com/99designs/gqlgen v0.17.89 // indirect
+	golang.org/x/sync v0.20.0 // indirect
 )
 
 require (

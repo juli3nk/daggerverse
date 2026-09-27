@@ -31,7 +31,7 @@ func (m *Jsonfile) Lint(
 			execArgs = append(execArgs, paths...)
 		}
 	} else {
-		execArgs = append(execArgs, ".")
+		execArgs = append(execArgs, "'**/*.json'")
 	}
 
 	_, err := dag.Container().
